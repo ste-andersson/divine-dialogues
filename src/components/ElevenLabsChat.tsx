@@ -66,17 +66,19 @@ export const ElevenLabsChat = () => {
         console.log("Adding user message to UI:", userMessage);
         setMessages(prev => [...prev, userMessage]);
       } else if (message.type === "data_collection" && message.data) {
-        // Handle data collection directly from ElevenLabs
+        // Handle data collection from ElevenLabs
         console.log("Received data collection from ElevenLabs:", message.data);
-        const collectedData: DataCollection = {};
-        
-        // Map ElevenLabs data to our format
-        if (message.data.project) collectedData.project = message.data.project;
-        if (message.data.hours) collectedData.hours = message.data.hours;
-        if (message.data.summary) collectedData.summary = message.data.summary;
-        if (message.data.closed) collectedData.closed = message.data.closed;
-        
-        setDataCollection(collectedData);
+        setDataCollection(message.data);
+      } else if (message.source === "ai") {
+        // Handle messages from the old format
+        console.log("Handling AI message from source format");
+        const assistantMessage = { role: "assistant", content: message.message || "" };
+        setMessages(prev => [...prev, assistantMessage]);
+      } else if (message.source === "user") {
+        // Handle messages from the old format
+        console.log("Handling user message from source format");
+        const userMessage = { role: "user", content: message.message || "" };
+        setMessages(prev => [...prev, userMessage]);
       }
     }
   });
@@ -118,7 +120,7 @@ export const ElevenLabsChat = () => {
           project: data.project || null,
           hours: data.hours || null,
           summary: data.summary || null,
-          closed: data.closed !== undefined ? data.closed : null
+          closed: data.closed || null
         });
 
       if (error) {
@@ -358,9 +360,7 @@ export const ElevenLabsChat = () => {
       </div>
 
       {/* Always show the TranscriptionDisplay when connected or if there are messages */}
-      {(status === "connected" || messages.length > 0) && (
-        <TranscriptionDisplay messages={messages} />
-      )}
+      <TranscriptionDisplay messages={messages} />
 
       {(isLoadingData || dataCollection) && (
         <DataCollectionDisplay 
