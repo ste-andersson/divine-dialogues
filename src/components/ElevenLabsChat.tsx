@@ -4,12 +4,16 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import DataCollectionDisplay, { DataCollection } from "./DataCollectionDisplay";
 
 export const ElevenLabsChat = () => {
   const { toast } = useToast();
   const [isStarted, setIsStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
+  const [dataCollection, setDataCollection] = useState<DataCollection | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -24,6 +28,11 @@ export const ElevenLabsChat = () => {
         title: "Disconnected from AI assistant",
         description: "The conversation has ended",
       });
+      
+      // Fetch data collection after conversation ends
+      if (conversationId) {
+        fetchDataCollection(conversationId);
+      }
     },
     onError: (error) => {
       console.error("Conversation error:", error);
@@ -61,6 +70,72 @@ export const ElevenLabsChat = () => {
     checkMicrophonePermission();
   }, []);
 
+  const fetchDataCollection = async (id: string) => {
+    setIsLoadingData(true);
+    setDataCollection(null);
+    
+    // Implement polling since the data might not be available immediately
+    let attempts = 0;
+    const maxAttempts = 5; // Try up to 5 times
+    const pollInterval = 3000; // 3 seconds between attempts
+    
+    const pollForData = async () => {
+      if (attempts >= maxAttempts) {
+        setIsLoadingData(false);
+        toast({
+          variant: "destructive",
+          title: "Data collection failed",
+          description: "Could not retrieve conversation data after several attempts.",
+        });
+        return;
+      }
+      
+      try {
+        const apiKey = process.env.ELEVEN_LABS_API_KEY || '';
+        const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/${id}/data-collection`, {
+          method: 'GET',
+          headers: {
+            'xi-api-key': apiKey,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Extract the specific fields we need
+          const collectedData: DataCollection = {
+            project: data.items?.find((item: any) => item.id === 'project')?.value,
+            hours: data.items?.find((item: any) => item.id === 'hours')?.value,
+            summary: data.items?.find((item: any) => item.id === 'summary')?.value,
+            closed: data.items?.find((item: any) => item.id === 'closed')?.value,
+          };
+          
+          // Check if we have at least one piece of data
+          if (Object.values(collectedData).some(value => value !== undefined)) {
+            setDataCollection(collectedData);
+            setIsLoadingData(false);
+          } else {
+            // If no data is found yet, try again
+            attempts++;
+            setTimeout(pollForData, pollInterval);
+          }
+        } else {
+          // If API returns error, wait and try again
+          attempts++;
+          setTimeout(pollForData, pollInterval);
+        }
+      } catch (error) {
+        console.error("Error fetching data collection:", error);
+        attempts++;
+        setTimeout(pollForData, pollInterval);
+      }
+    };
+    
+    // Start the polling process
+    pollForData();
+  };
+
   const startConversation = async () => {
     try {
       if (status === "connected") {
@@ -69,11 +144,13 @@ export const ElevenLabsChat = () => {
         return;
       }
 
-      await conversation.startSession({ 
+      const result = await conversation.startSession({ 
         agentId: "w3YAPXpuEtNWtT2bqpKZ" 
       });
       
+      setConversationId(result);
       setIsStarted(true);
+      setDataCollection(null);
     } catch (error) {
       console.error("Error starting conversation:", error);
       toast({
@@ -105,49 +182,59 @@ export const ElevenLabsChat = () => {
   }
 
   return (
-    <div className="flex flex-col items-center space-y-6 p-6 bg-white rounded-lg shadow-md w-full max-w-md mx-auto">
-      <div className="w-full flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Voice Assistant</h2>
-        {status === "connected" && (
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={toggleMute}
-            aria-label={isMuted ? "Unmute" : "Mute"}
-          >
-            {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-          </Button>
-        )}
-      </div>
-      
-      <div className={`w-full h-24 rounded-lg flex items-center justify-center transition-colors ${isSpeaking ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
-        {isSpeaking ? (
-          <div className="flex items-center space-x-2">
-            <span className="animate-pulse text-blue-600">Assistant is speaking...</span>
-          </div>
-        ) : status === "connected" ? (
-          <p className="text-gray-600">Listening for your voice...</p>
-        ) : (
-          <p className="text-gray-500">Press the button below to start</p>
-        )}
+    <div className="flex flex-col items-center space-y-6 w-full max-w-md mx-auto">
+      <div className="flex flex-col items-center space-y-6 p-6 bg-white rounded-lg shadow-md w-full">
+        <div className="w-full flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Voice Assistant</h2>
+          {status === "connected" && (
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={toggleMute}
+              aria-label={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </Button>
+          )}
+        </div>
+        
+        <div className={`w-full h-24 rounded-lg flex items-center justify-center transition-colors ${isSpeaking ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 border border-gray-200'}`}>
+          {isSpeaking ? (
+            <div className="flex items-center space-x-2">
+              <span className="animate-pulse text-blue-600">Assistant is speaking...</span>
+            </div>
+          ) : status === "connected" ? (
+            <p className="text-gray-600">Listening for your voice...</p>
+          ) : (
+            <p className="text-gray-500">Press the button below to start</p>
+          )}
+        </div>
+
+        <Button 
+          className="w-full"
+          onClick={startConversation}
+          disabled={permissionGranted === null}
+          variant={status === "connected" ? "destructive" : "default"}
+        >
+          {status === "connected" ? (
+            <>
+              <MicOff className="mr-2 h-5 w-5" /> End Conversation
+            </>
+          ) : (
+            <>
+              <Mic className="mr-2 h-5 w-5" /> Start Conversation
+            </>
+          )}
+        </Button>
       </div>
 
-      <Button 
-        className="w-full"
-        onClick={startConversation}
-        disabled={permissionGranted === null}
-        variant={status === "connected" ? "destructive" : "default"}
-      >
-        {status === "connected" ? (
-          <>
-            <MicOff className="mr-2 h-5 w-5" /> End Conversation
-          </>
-        ) : (
-          <>
-            <Mic className="mr-2 h-5 w-5" /> Start Conversation
-          </>
-        )}
-      </Button>
+      {/* Data Collection Display */}
+      {(isLoadingData || dataCollection) && (
+        <DataCollectionDisplay 
+          data={dataCollection} 
+          isLoading={isLoadingData} 
+        />
+      )}
     </div>
   );
 };
