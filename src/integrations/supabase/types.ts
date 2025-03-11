@@ -11,7 +11,7 @@ export type Database = {
     Tables: {
       conversation_data: {
         Row: {
-          closed: boolean | null
+          closed: string | null
           conversation_id: string
           created_at: string
           hours: string | null
@@ -20,7 +20,7 @@ export type Database = {
           summary: string | null
         }
         Insert: {
-          closed?: boolean | null
+          closed?: string | null
           conversation_id: string
           created_at?: string
           hours?: string | null
@@ -29,7 +29,7 @@ export type Database = {
           summary?: string | null
         }
         Update: {
-          closed?: boolean | null
+          closed?: string | null
           conversation_id?: string
           created_at?: string
           hours?: string | null

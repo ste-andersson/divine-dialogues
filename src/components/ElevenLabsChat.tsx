@@ -130,7 +130,7 @@ export const ElevenLabsChat = () => {
         project: "Voice Chat",
         summary: "Voice conversation with AI assistant",
         hours: new Date().toISOString(),
-        closed: true
+        closed: "completed" // Changed from boolean to string
       };
       
       console.log("Saving conversation data for ID:", id, conversationData);

@@ -7,7 +7,7 @@ export type DataCollection = {
   project?: string;
   hours?: string;
   summary?: string;
-  closed?: boolean;
+  closed?: string;
 };
 
 interface DataCollectionDisplayProps {
@@ -65,7 +65,7 @@ const DataCollectionDisplay = ({ data, isLoading, savedToDatabase }: DataCollect
         )}
         {data.closed !== undefined && (
           <div>
-            <span className="font-semibold">Status:</span> {data.closed ? "Closed" : "Open"}
+            <span className="font-semibold">Status:</span> {data.closed}
           </div>
         )}
       </CardContent>
