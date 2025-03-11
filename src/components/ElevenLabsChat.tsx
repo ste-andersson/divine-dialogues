@@ -55,10 +55,13 @@ export const ElevenLabsChat = () => {
     },
     onMessage: (message) => {
       console.log("Received message:", message);
-      // Store messages based on their source
+      
+      // Fix the message handling to properly set messages for display
       if (message.type === "llm_response" || message.type === "voice_response") {
+        console.log("Adding assistant message to UI:", message.text);
         setMessages(prev => [...prev, { role: "assistant", content: message.text || "" }]);
       } else if (message.type === "user_response") {
+        console.log("Adding user message to UI:", message.text);
         setMessages(prev => [...prev, { role: "user", content: message.text || "" }]);
       }
     }
@@ -181,86 +184,108 @@ export const ElevenLabsChat = () => {
   };
 
   const extractDataFromMessages = (messages: Array<{ role: string; content: string }>): DataCollection => {
-    // Initialize empty data collection
-    const extractedData: DataCollection = {};
+    // This function will extract data from the assistant's messages
+    const data: DataCollection = {};
     
     console.log("Extracting data from messages:", messages);
     
-    // Convert all messages to a single string to search for patterns
-    const fullText = messages.map(m => m.content).join(" ");
+    // Get only the assistant's messages as they contain the structured data
+    const assistantMessages = messages.filter(m => m.role === "assistant");
+    const userMessages = messages.filter(m => m.role === "user");
     
-    // Attempt to extract project information
-    const projectMatch = fullText.match(/projekt:?\s*([^.,\n]+)/i) || 
-                         fullText.match(/project:?\s*([^.,\n]+)/i);
-    if (projectMatch && projectMatch[1]) {
-      extractedData.project = projectMatch[1].trim();
-    }
+    // Join all assistant and user messages to check for key information
+    const assistantText = assistantMessages.map(m => m.content).join(" ");
+    const userText = userMessages.map(m => m.content).join(" ");
+    const fullText = assistantText + " " + userText;
     
-    // Attempt to extract hours information
-    const hoursMatch = fullText.match(/timmar:?\s*([^.,\n]+)/i) || 
-                       fullText.match(/hours:?\s*([^.,\n]+)/i) ||
-                       fullText.match(/tog:?\s*([^.,\n]+)(?:timmar|timme)/i);
-    if (hoursMatch && hoursMatch[1]) {
-      extractedData.hours = hoursMatch[1].trim();
-    }
+    // Swedish pattern matching
+    const projectPatterns = [
+      /(?:projekt|uppdrag|jobb)(?:\s+för)?(?:\s+på)?(?:\s+om)?(?:\s+med)?(?:\s+i)?:?\s+([^.,!?]+)/i,
+      /([^.,!?]+)(?:\s+café|kafé|restaurang|butik)/i,
+      /på\s+([^.,!?]+)(?:\s+är|har)/i
+    ];
     
-    // Attempt to extract summary
-    const summaryMatch = fullText.match(/sammanfattning:?\s*([^.]+\.)/i) ||
-                         fullText.match(/summary:?\s*([^.]+\.)/i) ||
-                         fullText.match(/beskrivning:?\s*([^.]+\.)/i);
-    if (summaryMatch && summaryMatch[1]) {
-      extractedData.summary = summaryMatch[1].trim();
-    }
-    
-    // Set a status based on the conversation
-    if (fullText.toLowerCase().includes("slutfört") || 
-        fullText.toLowerCase().includes("complete") || 
-        fullText.toLowerCase().includes("finished") ||
-        fullText.toLowerCase().includes("done")) {
-      extractedData.closed = "completed";
-    } else if (fullText.toLowerCase().includes("pågående") || 
-               fullText.toLowerCase().includes("in progress") ||
-               fullText.toLowerCase().includes("ongoing")) {
-      extractedData.closed = "in progress";
-    } else {
-      extractedData.closed = "pending";
-    }
-    
-    // If we couldn't extract much, create some default data
-    if (!extractedData.project) {
-      const cafeMatch = fullText.match(/([^\s]+(?:\s+[^\s]+){0,2})\s+café/i);
-      if (cafeMatch) {
-        extractedData.project = `${cafeMatch[1]} Café`;
-      } else {
-        extractedData.project = "Voice Conversation";
+    // Try to find a project name
+    for (const pattern of projectPatterns) {
+      const match = fullText.match(pattern);
+      if (match && match[1]) {
+        let project = match[1].trim();
+        // Add "Café" suffix if it looks like a café name
+        if (fullText.toLowerCase().includes("café") && !project.toLowerCase().includes("café")) {
+          project += " Café";
+        }
+        data.project = project;
+        break;
       }
     }
     
-    if (!extractedData.summary) {
-      // Try to extract a useful summary from the conversation
-      const userMessages = messages.filter(m => m.role === "user");
+    // Extract hours - look for hour patterns in Swedish
+    const hourPatterns = [
+      /(?:tog|tar|varade|pågick|tog)\s+(\d+)(?:\s+timmar|\s+timme|\s+timma)/i,
+      /(\d+)(?:\s+timmar|\s+timme|\s+timma)/i
+    ];
+    
+    for (const pattern of hourPatterns) {
+      const match = fullText.match(pattern);
+      if (match && match[1]) {
+        data.hours = match[1] + " timmar";
+        break;
+      }
+    }
+    
+    // Extract summary - look for summary or description patterns
+    const summaryPatterns = [
+      /(?:sammanfattning|beskrivning|rapport|summering):?\s+([^.!?]+[.!?])/i,
+      /(?:handlade om|gällde|det var)\s+([^.!?]+[.!?])/i
+    ];
+    
+    for (const pattern of summaryPatterns) {
+      const match = fullText.match(pattern);
+      if (match && match[1]) {
+        data.summary = match[1].trim();
+        break;
+      }
+    }
+    
+    // Default summary if no pattern matches
+    if (!data.summary) {
+      // If no specific summary found, try to use the first user message as a summary
       if (userMessages.length > 0) {
-        extractedData.summary = `Conversation with ${userMessages.length} user messages`;
-      } else {
-        extractedData.summary = "Voice conversation";
+        data.summary = userMessages[0].content;
       }
     }
     
-    if (!extractedData.hours) {
-      // Look for number patterns that might be hours
-      const timePattern = /(\d+)\s*(timmar|timme|hour|hours)/i;
-      const timeMatch = fullText.match(timePattern);
-      
-      if (timeMatch) {
-        extractedData.hours = timeMatch[1] + " hours";
+    // Check for status keywords
+    if (fullText.toLowerCase().includes("slutfört") || 
+        fullText.toLowerCase().includes("klart") || 
+        fullText.toLowerCase().includes("färdigt")) {
+      data.closed = "completed";
+    } else if (fullText.toLowerCase().includes("pågående") || 
+               fullText.toLowerCase().includes("fortsätter") ||
+               fullText.toLowerCase().includes("ej klart")) {
+      data.closed = "in progress";
+    } else {
+      // Default to completed since most tasks being reported are completed
+      data.closed = "completed";
+    }
+    
+    // If project is still missing, try to extract from specific phrases
+    if (!data.project) {
+      const cafeMatch = fullText.match(/(?:på|för|hos|med)\s+([^.,!?]+)(?:\s+café|kafé|restaurang|butik)?/i);
+      if (cafeMatch) {
+        data.project = cafeMatch[1].trim();
+        // Add "Café" suffix if it looks like a café name
+        if (fullText.toLowerCase().includes("café") && !data.project.toLowerCase().includes("café")) {
+          data.project += " Café";
+        }
       } else {
-        // Use current time as a fallback
-        extractedData.hours = new Date().toISOString();
+        // Default project name
+        data.project = "Voice Conversation";
       }
     }
     
-    console.log("Extracted data:", extractedData);
-    return extractedData;
+    console.log("Extracted data:", data);
+    return data;
   };
 
   const saveConversationData = async (id: string) => {
@@ -418,6 +443,7 @@ export const ElevenLabsChat = () => {
         </Button>
       </div>
 
+      {/* Always show the TranscriptionDisplay when connected or if there are messages */}
       {(messages.length > 0 || status === "connected") && (
         <TranscriptionDisplay messages={messages} />
       )}
