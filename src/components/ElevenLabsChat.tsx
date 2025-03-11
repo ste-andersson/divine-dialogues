@@ -1,4 +1,3 @@
-
 import { useConversation } from "@11labs/react";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,6 @@ export const ElevenLabsChat = () => {
     onMessage: (message) => {
       console.log("Received message:", message);
       
-      // Fix message handling to properly display in UI
       if (message.type === "llm_response" || message.type === "voice_response") {
         const assistantMessage = { role: "assistant", content: message.text || "" };
         console.log("Adding assistant message to UI:", assistantMessage);
@@ -65,18 +63,22 @@ export const ElevenLabsChat = () => {
         const userMessage = { role: "user", content: message.text || "" };
         console.log("Adding user message to UI:", userMessage);
         setMessages(prev => [...prev, userMessage]);
-      } else if (message.type === "data_collection" && message.data) {
-        // Handle data collection from ElevenLabs
-        console.log("Received data collection from ElevenLabs:", message.data);
-        setDataCollection(message.data);
+      } else if (message.type === "data_collection") {
+        console.log("Received data collection from ElevenLabs:", message);
+        if (message.data) {
+          const collectedData: DataCollection = {
+            project: message.data.project || null,
+            hours: message.data.hours || null,
+            summary: message.data.summary || null,
+            closed: message.data.closed || null
+          };
+          console.log("Processed data collection:", collectedData);
+          setDataCollection(collectedData);
+        }
       } else if (message.source === "ai") {
-        // Handle messages from the old format
-        console.log("Handling AI message from source format");
         const assistantMessage = { role: "assistant", content: message.message || "" };
         setMessages(prev => [...prev, assistantMessage]);
       } else if (message.source === "user") {
-        // Handle messages from the old format
-        console.log("Handling user message from source format");
         const userMessage = { role: "user", content: message.message || "" };
         setMessages(prev => [...prev, userMessage]);
       }
@@ -159,7 +161,7 @@ export const ElevenLabsChat = () => {
     try {
       // Format the transcription as a readable text
       const transcriptText = messages.map(msg => 
-        `${msg.role === 'assistant' ? 'Assistant' : 'User'}: ${msg.content}`
+        `${msg.role === 'assistant' ? 'A' : 'You'}: ${msg.content}`
       ).join('\n\n');
 
       console.log("Saving transcription for conversation ID:", id);
