@@ -137,7 +137,8 @@ export const ElevenLabsChat = () => {
         setSavedToDatabase(saved);
         
         toast({
-          variant: "warning",
+          // Changed from "warning" to "default" since "warning" is not a valid variant
+          variant: "default",
           title: "Limited data collected",
           description: "Could not retrieve detailed conversation data, but saved basic information.",
         });
