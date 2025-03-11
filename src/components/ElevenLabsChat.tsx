@@ -1,3 +1,4 @@
+
 import { useConversation } from "@11labs/react";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -54,11 +55,10 @@ export const ElevenLabsChat = () => {
     },
     onMessage: (message) => {
       console.log("Received message:", message);
-      if (message.type === "llm_response") {
-        // Store AI messages
+      // Store messages based on their source
+      if (message.type === "llm_response" || message.type === "voice_response") {
         setMessages(prev => [...prev, { role: "assistant", content: message.text || "" }]);
       } else if (message.type === "user_response") {
-        // Store user messages
         setMessages(prev => [...prev, { role: "user", content: message.text || "" }]);
       }
     }
@@ -144,6 +144,8 @@ export const ElevenLabsChat = () => {
       ).join('\n\n');
 
       console.log("Saving transcription for conversation ID:", id);
+      console.log("Transcription content:", transcriptText);
+      console.log("Messages to save:", messages);
       
       const { error } = await supabase
         .from('conversation_transcripts')
@@ -182,36 +184,42 @@ export const ElevenLabsChat = () => {
     // Initialize empty data collection
     const extractedData: DataCollection = {};
     
+    console.log("Extracting data from messages:", messages);
+    
     // Convert all messages to a single string to search for patterns
     const fullText = messages.map(m => m.content).join(" ");
     
     // Attempt to extract project information
-    const projectMatch = fullText.match(/project:?\s*([^.,\n]+)/i);
+    const projectMatch = fullText.match(/projekt:?\s*([^.,\n]+)/i) || 
+                         fullText.match(/project:?\s*([^.,\n]+)/i);
     if (projectMatch && projectMatch[1]) {
       extractedData.project = projectMatch[1].trim();
     }
     
     // Attempt to extract hours information
-    const hoursMatch = fullText.match(/hours:?\s*([^.,\n]+)/i) || 
-                      fullText.match(/worked for:?\s*([^.,\n]+)/i) ||
-                      fullText.match(/time spent:?\s*([^.,\n]+)/i);
+    const hoursMatch = fullText.match(/timmar:?\s*([^.,\n]+)/i) || 
+                       fullText.match(/hours:?\s*([^.,\n]+)/i) ||
+                       fullText.match(/tog:?\s*([^.,\n]+)(?:timmar|timme)/i);
     if (hoursMatch && hoursMatch[1]) {
       extractedData.hours = hoursMatch[1].trim();
     }
     
     // Attempt to extract summary
-    const summaryMatch = fullText.match(/summary:?\s*([^.]+\.)/i) ||
-                         fullText.match(/description:?\s*([^.]+\.)/i);
+    const summaryMatch = fullText.match(/sammanfattning:?\s*([^.]+\.)/i) ||
+                         fullText.match(/summary:?\s*([^.]+\.)/i) ||
+                         fullText.match(/beskrivning:?\s*([^.]+\.)/i);
     if (summaryMatch && summaryMatch[1]) {
       extractedData.summary = summaryMatch[1].trim();
     }
     
     // Set a status based on the conversation
-    if (fullText.toLowerCase().includes("complete") || 
+    if (fullText.toLowerCase().includes("slutfört") || 
+        fullText.toLowerCase().includes("complete") || 
         fullText.toLowerCase().includes("finished") ||
         fullText.toLowerCase().includes("done")) {
       extractedData.closed = "completed";
-    } else if (fullText.toLowerCase().includes("in progress") ||
+    } else if (fullText.toLowerCase().includes("pågående") || 
+               fullText.toLowerCase().includes("in progress") ||
                fullText.toLowerCase().includes("ongoing")) {
       extractedData.closed = "in progress";
     } else {
@@ -220,19 +228,38 @@ export const ElevenLabsChat = () => {
     
     // If we couldn't extract much, create some default data
     if (!extractedData.project) {
-      extractedData.project = "Voice Conversation";
+      const cafeMatch = fullText.match(/([^\s]+(?:\s+[^\s]+){0,2})\s+café/i);
+      if (cafeMatch) {
+        extractedData.project = `${cafeMatch[1]} Café`;
+      } else {
+        extractedData.project = "Voice Conversation";
+      }
     }
     
     if (!extractedData.summary) {
-      // Create a summary based on the conversation length
-      extractedData.summary = `Conversation with ${messages.filter(m => m.role === "user").length} user messages`;
+      // Try to extract a useful summary from the conversation
+      const userMessages = messages.filter(m => m.role === "user");
+      if (userMessages.length > 0) {
+        extractedData.summary = `Conversation with ${userMessages.length} user messages`;
+      } else {
+        extractedData.summary = "Voice conversation";
+      }
     }
     
     if (!extractedData.hours) {
-      // Use current time as a fallback
-      extractedData.hours = new Date().toISOString();
+      // Look for number patterns that might be hours
+      const timePattern = /(\d+)\s*(timmar|timme|hour|hours)/i;
+      const timeMatch = fullText.match(timePattern);
+      
+      if (timeMatch) {
+        extractedData.hours = timeMatch[1] + " hours";
+      } else {
+        // Use current time as a fallback
+        extractedData.hours = new Date().toISOString();
+      }
     }
     
+    console.log("Extracted data:", extractedData);
     return extractedData;
   };
 
@@ -391,7 +418,7 @@ export const ElevenLabsChat = () => {
         </Button>
       </div>
 
-      {messages.length > 0 && (
+      {(messages.length > 0 || status === "connected") && (
         <TranscriptionDisplay messages={messages} />
       )}
 
