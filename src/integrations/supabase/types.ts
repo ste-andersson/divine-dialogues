@@ -60,6 +60,51 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          adress: string
+          arbetstimmar: number
+          fakturastatus: string
+          id: string
+          kontaktperson: string
+          kostnad: number
+          kund: string
+          prioritet: string
+          status: string
+          telefonnr: string
+          typ_av_arbete: string
+          uppdragsnr: string
+        }
+        Insert: {
+          adress: string
+          arbetstimmar: number
+          fakturastatus: string
+          id?: string
+          kontaktperson: string
+          kostnad: number
+          kund: string
+          prioritet: string
+          status: string
+          telefonnr: string
+          typ_av_arbete: string
+          uppdragsnr: string
+        }
+        Update: {
+          adress?: string
+          arbetstimmar?: number
+          fakturastatus?: string
+          id?: string
+          kontaktperson?: string
+          kostnad?: number
+          kund?: string
+          prioritet?: string
+          status?: string
+          telefonnr?: string
+          typ_av_arbete?: string
+          uppdragsnr?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

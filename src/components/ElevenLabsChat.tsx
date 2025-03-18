@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import useElevenLabs from "@/hooks/use-eleven-labs";
 import MicrophonePermission from "./MicrophonePermission";
 import ConversationControls from "./ConversationControls";
@@ -8,6 +9,7 @@ import TranscriptionDisplay from "./TranscriptionDisplay";
 
 export const ElevenLabsChat = () => {
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
+  const navigate = useNavigate();
   
   const {
     conversation,
@@ -47,6 +49,14 @@ export const ElevenLabsChat = () => {
 
     checkMicrophonePermission();
   }, []);
+
+  // Navigate to project details page when conversation ends and data is saved
+  useEffect(() => {
+    if (status === "disconnected" && savedToDatabase && dataCollection && conversation.sessionId) {
+      console.log("Conversation ended, navigating to project details page");
+      navigate(`/project-details/${conversation.sessionId}`);
+    }
+  }, [status, savedToDatabase, dataCollection, conversation.sessionId, navigate]);
 
   return (
     <div className="flex flex-col items-center space-y-6 w-full max-w-xl mx-auto">
