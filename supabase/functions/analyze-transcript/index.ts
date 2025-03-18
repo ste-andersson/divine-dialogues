@@ -19,13 +19,32 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not set')
     }
 
-    const { transcript, conversationId } = await req.json()
+    const { transcript, conversationId, projectOptions } = await req.json()
 
     if (!transcript || !conversationId) {
       throw new Error('Missing required parameters: transcript or conversationId')
     }
 
     console.log(`Processing transcript analysis for conversation: ${conversationId}`)
+    console.log(`Available project options: ${JSON.stringify(projectOptions)}`)
+    
+    // Prepare the system message with project options if available
+    let systemContent = `You are an assistant that extracts structured data from conversation transcripts.
+            Extract the following information from the transcript:
+            - Project number (format like "12345")
+            - Hours reported (a number)
+            - Summary of what was discussed/reported
+            - Whether the case should be marked as closed (yes/no)`
+    
+    // Add project options context if available
+    if (projectOptions && projectOptions.length > 0) {
+      systemContent += `\n\nFor the project, select the best matching option from this list:
+${projectOptions.map(p => `- ${p.uppdragsnr} - ${p.kund}`).join('\n')}
+
+Choose the project number that most closely matches what's mentioned in the transcript. If nothing matches, just provide the project number mentioned in the transcript.`
+    }
+    
+    systemContent += `\nFormat your response as a JSON object with keys: project, hours, summary, closed`
     
     // Query OpenAI to analyze the transcript
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -39,13 +58,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an assistant that extracts structured data from conversation transcripts.
-            Extract the following information from the transcript:
-            - Project number (format like "12345")
-            - Hours reported (a number)
-            - Summary of what was discussed/reported
-            - Whether the case should be marked as closed (yes/no)
-            Format your response as a JSON object with keys: project, hours, summary, closed`
+            content: systemContent
           },
           {
             role: 'user',

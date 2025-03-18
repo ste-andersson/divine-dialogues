@@ -4,14 +4,19 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ProjectDetailsForm from "@/components/ProjectDetailsForm";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+
+interface ProjectOption {
+  uppdragsnr: string;
+  kund: string;
+}
 
 const ProjectDetails = () => {
   const { conversationId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [data, setData] = useState<{
     project?: string;
     hours?: string;
@@ -22,8 +27,9 @@ const ProjectDetails = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Fetch all required data when the component mounts
   useEffect(() => {
-    const fetchConversationData = async () => {
+    const fetchAllData = async () => {
       if (!conversationId) {
         toast({
           variant: "destructive",
@@ -35,7 +41,9 @@ const ProjectDetails = () => {
       }
 
       try {
-        // Fetch existing conversation data if available
+        setIsLoading(true);
+        
+        // 1. Fetch existing conversation data if available
         const { data: conversationData, error: conversationError } = await supabase
           .from("conversation_data")
           .select("project, hours, summary, closed")
@@ -46,7 +54,7 @@ const ProjectDetails = () => {
           throw conversationError;
         }
 
-        // Fetch transcript
+        // 2. Fetch transcript
         const { data: transcriptData, error: transcriptError } = await supabase
           .from("conversation_transcripts")
           .select("transcript")
@@ -57,30 +65,57 @@ const ProjectDetails = () => {
           throw transcriptError;
         }
 
+        // 3. Fetch available projects
+        const { data: projectsData, error: projectsError } = await supabase
+          .from("projects")
+          .select("uppdragsnr, kund")
+          .order("uppdragsnr");
+
+        if (projectsError) {
+          throw projectsError;
+        }
+
         setData(conversationData || null);
         setTranscript(transcriptData?.transcript || null);
+        setProjects(projectsData || []);
+        
+        // If we have a transcript but no data (or incomplete data), analyze automatically
+        const shouldAnalyze = transcriptData?.transcript && 
+          (!conversationData || !conversationData.project || !conversationData.hours);
+        
+        if (shouldAnalyze) {
+          // We'll analyze in the next useEffect to ensure all state is updated
+        } else {
+          setIsLoading(false);
+        }
       } catch (error) {
-        console.error("Error fetching conversation data:", error);
+        console.error("Error fetching data:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load conversation data. Please try again.",
+          description: "Failed to load data. Please try again.",
         });
-      } finally {
         setIsLoading(false);
       }
     };
 
-    fetchConversationData();
+    fetchAllData();
   }, [conversationId, toast, navigate]);
+
+  // Automatically analyze transcript when needed
+  useEffect(() => {
+    const autoAnalyzeTranscript = async () => {
+      if (!isLoading && transcript && projects.length > 0 && 
+          (!data || !data.project || !data.hours)) {
+        await analyzeTranscript();
+      }
+    };
+
+    autoAnalyzeTranscript();
+  }, [isLoading, transcript, projects, data]);
 
   const analyzeTranscript = async () => {
     if (!conversationId || !transcript) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No transcript available for analysis.",
-      });
       return;
     }
 
@@ -92,7 +127,11 @@ const ProjectDetails = () => {
       });
 
       const { data: analysisResult, error } = await supabase.functions.invoke('analyze-transcript', {
-        body: { transcript, conversationId },
+        body: { 
+          transcript, 
+          conversationId,
+          projectOptions: projects 
+        },
       });
 
       if (error) throw error;
@@ -133,10 +172,11 @@ const ProjectDetails = () => {
       });
     } finally {
       setIsAnalyzing(false);
+      setIsLoading(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isAnalyzing) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
@@ -163,23 +203,13 @@ const ProjectDetails = () => {
         <CardHeader>
           <CardTitle>Project Details</CardTitle>
           <CardDescription>
-            Please fill in the details about the project discussed in your conversation.
+            Details about the project discussed in your conversation.
+            {isAnalyzing ? " Analyzing conversation..." : ""}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ProjectDetailsForm conversationId={conversationId || ""} initialData={data || undefined} />
         </CardContent>
-        {transcript && (
-          <CardFooter className="flex justify-center pt-2 pb-6">
-            <Button 
-              onClick={analyzeTranscript} 
-              disabled={isAnalyzing}
-              className="w-full md:w-auto"
-            >
-              {isAnalyzing ? "Analyzing..." : "Analyze Conversation with AI"}
-            </Button>
-          </CardFooter>
-        )}
       </Card>
     </div>
   );
