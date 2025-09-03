@@ -1,25 +1,51 @@
 import { Navigation } from '@/components/Navigation';
+import { useCase } from '@/contexts/CaseContext';
+import { useChecklistResponses } from '@/hooks/use-checklist-responses';
+import { useCaseDefects } from '@/hooks/use-case-defects';
+import DocumentView from '@/components/DocumentView';
+import { Button } from '@/components/ui/button';
+import { Printer } from 'lucide-react';
 
 const Files = () => {
+  const { selectedCase } = useCase();
+  const { responses } = useChecklistResponses(selectedCase?.id || null);
+  const { defects } = useCaseDefects(selectedCase?.id || null);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-6 py-12">
-        <header className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-poppins font-extrabold mb-6 text-primary">
-            Filer
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Hantera dokument och filer relaterade till tillsyn
-          </p>
-        </header>
-        
-        <main className="flex justify-center">
-          <div className="w-full max-w-4xl bg-card rounded-lg border border-border p-8 text-center">
-            <p className="text-muted-foreground">
-              Den här sidan kommer att innehålla filhantering och dokumentarkiv.
-            </p>
+      <div className="py-8">
+        <div className="container mx-auto px-6 mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-poppins font-extrabold text-primary mb-2">
+                Tillsynsmeddelande
+              </h1>
+              {selectedCase && (
+                <p className="text-muted-foreground">
+                  {selectedCase.name} - {selectedCase.case_number}
+                </p>
+              )}
+            </div>
+            {selectedCase && (
+              <Button onClick={handlePrint} variant="outline" className="flex items-center gap-2">
+                <Printer className="h-4 w-4" />
+                Skriv ut
+              </Button>
+            )}
           </div>
+        </div>
+        
+        <main className="bg-white">
+          <DocumentView 
+            selectedCase={selectedCase}
+            checklistResponses={responses}
+            defects={defects}
+          />
         </main>
       </div>
     </div>
