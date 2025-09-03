@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { FileText, CheckSquare, MessageCircle, Folder, Menu } from 'lucide-react';
+import { FileText, CheckSquare, MessageCircle, Menu } from 'lucide-react';
 import { useCase } from '@/contexts/CaseContext';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useState } from 'react';
@@ -12,7 +12,7 @@ export const Navigation = () => {
     { title: 'Ärenden', path: '/cases', icon: FileText },
     { title: 'Checklista/brister', path: '/checklist', icon: CheckSquare },
     { title: 'Tillsynsassistenten', path: '/', icon: MessageCircle },
-    { title: 'Filer', path: '/files', icon: Folder },
+    { title: 'Utkast', path: '/files', icon: FileText },
   ];
 
   const NavigationItems = ({ mobile = false }) => (

@@ -23,7 +23,7 @@ const Files = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-poppins font-extrabold text-primary mb-2">
-                Tillsynsmeddelande
+                Utkast
               </h1>
               {selectedCase && (
                 <p className="text-muted-foreground">
@@ -40,12 +40,16 @@ const Files = () => {
           </div>
         </div>
         
-        <main className="bg-white">
-          <DocumentView 
-            selectedCase={selectedCase}
-            checklistResponses={responses}
-            defects={defects}
-          />
+        <main className="bg-gray-100 py-8">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="bg-white shadow-2xl shadow-black/10 rounded-lg overflow-hidden">
+              <DocumentView 
+                selectedCase={selectedCase}
+                checklistResponses={responses}
+                defects={defects}
+              />
+            </div>
+          </div>
         </main>
       </div>
     </div>
