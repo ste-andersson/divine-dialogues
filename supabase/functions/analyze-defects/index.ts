@@ -34,7 +34,7 @@ serve(async (req) => {
       `Defect ${defect.defect_number}: ${defect.description}`
     ).join('\n');
 
-    const systemPrompt = `Du ska skapa en json-fil för uppdatering av protokoll för brandskyddstillsyn. För varje defect_number ska du välja en standardtext för brist, en standardtext för åtgärd och en standardtext för motivering. Om det finns * i texten ska du byta ut * mot en formulering som passar i texten och som är det användaren talade om.
+    const systemPrompt = `Du ska skapa en json-fil för uppdatering av protokoll för brandskyddstillsyn. För varje defect_number ska du välja en standardtext för brist, en standardtext för åtgärd och en standardtext för motivering. Om det finns * i texten ska du byta ut * mot en formulering som passar i texten och som är det användaren talade om. Formulera dig på ett sätt som passar en myndighet.
 
 Här är standardtexterna:
 
