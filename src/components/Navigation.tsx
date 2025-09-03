@@ -73,10 +73,20 @@ export const Navigation = () => {
           {selectedCase && (
             <div className="flex items-center bg-primary/10 border border-primary/20 rounded-lg px-3 py-2 min-w-0 max-w-xs md:max-w-sm lg:max-w-md ml-auto">
               <div className="flex flex-col min-w-0 w-full">
-                <span className="text-xs font-medium text-primary/80 hidden sm:block mb-0.5">
-                  Valt ärende
-                </span>
-                <div className="flex items-center space-x-2 min-w-0">
+                {/* Desktop and iPad layout */}
+                <div className="hidden sm:block">
+                  <span className="text-xs font-medium text-primary/80 mb-0.5">
+                    Valt ärende {selectedCase.caseNumber}
+                  </span>
+                  <div className="min-w-0">
+                    <span className="text-sm font-semibold text-primary truncate block">
+                      {selectedCase.name}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Mobile layout */}
+                <div className="sm:hidden flex items-center space-x-2 min-w-0">
                   <span className="text-sm font-semibold text-primary truncate flex-1">
                     {selectedCase.name}
                   </span>
