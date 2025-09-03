@@ -91,8 +91,8 @@ export const useCaseDefects = (caseId: string | null) => {
     defects: query.data || [],
     isLoading: query.isLoading,
     error: query.error,
-    upsertDefect: upsertDefect.mutate,
-    deleteDefect: deleteDefect.mutate,
+    upsertDefect: upsertDefect.mutateAsync, // Return mutateAsync for promise-based usage
+    deleteDefect: deleteDefect.mutateAsync,   // Return mutateAsync for promise-based usage
     isUpsertLoading: upsertDefect.isPending,
     isDeleteLoading: deleteDefect.isPending,
   };
