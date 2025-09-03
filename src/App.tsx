@@ -11,6 +11,7 @@ import Checklist from "./pages/Checklist";
 import Files from "./pages/Files";
 import NotFound from "./pages/NotFound";
 import ProjectDetails from "./pages/ProjectDetails";
+import AdminDefects from "./pages/AdminDefects";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/checklist" element={<Checklist />} />
             <Route path="/files" element={<Files />} />
             <Route path="/project-details/:conversationId" element={<ProjectDetails />} />
+            <Route path="/admin-defects" element={<AdminDefects />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
