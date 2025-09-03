@@ -27,6 +27,31 @@
     --warning-foreground: 247 20% 15%;
     --radius: 0.75rem;
   }
+
+  .dark {
+    --background: 222 20% 10%;
+    --foreground: 210 40% 95%;
+    --card: 222 20% 12%;
+    --card-foreground: 210 40% 95%;
+    --primary: 210 76% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 196.9 39% 35%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 50 100% 50%;
+    --accent-foreground: 247 20% 15%;
+    --destructive: 9 58% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 19% 25%;
+    --recording: 9 58% 55%;
+    --recording-foreground: 0 0% 100%;
+    --success: 134 61% 50%;
+    --success-foreground: 0 0% 100%;
+    --warning: 50 100% 50%;
+    --warning-foreground: 0 0% 10%;
+    --radius: 0.75rem;
+  }
   
   * {
     @apply border-border;

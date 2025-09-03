@@ -4,6 +4,7 @@ import { useCase } from '@/contexts/CaseContext';
 import { useCases } from '@/hooks/use-cases';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Cases = () => {
   const { selectedCase, setSelectedCase } = useCase();
@@ -85,6 +86,11 @@ const Cases = () => {
             )}
           </div>
         </main>
+
+        {/* Theme Toggle at Bottom */}
+        <footer className="mt-16 pb-8 flex justify-center">
+          <ThemeToggle />
+        </footer>
       </div>
     </div>
   );
