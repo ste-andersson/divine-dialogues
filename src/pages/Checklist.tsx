@@ -86,16 +86,15 @@ const Checklist = () => {
               <div className="flex items-center justify-between gap-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 max-w-xs">
                   <TabsList className="grid w-full grid-cols-2 h-9">
-                    <TabsTrigger value="checklist" className="text-xs font-medium px-2">Checklista</TabsTrigger>
-                    <TabsTrigger value="defects" className="text-xs font-medium px-2">Brister</TabsTrigger>
+                    <TabsTrigger value="checklist" className="text-xs font-medium px-2 h-full">Checklista</TabsTrigger>
+                    <TabsTrigger value="defects" className="text-xs font-medium px-2 h-full">Brister</TabsTrigger>
                   </TabsList>
                 </Tabs>
                 
                 <Button 
                   onClick={handleSaveAll}
                   disabled={!hasUnsavedChanges || isSaving}
-                  size="sm"
-                  className="flex items-center gap-1.5 min-w-[120px] h-9 flex-shrink-0 text-xs font-medium"
+                  className="flex items-center gap-1.5 min-w-[120px] h-9 flex-shrink-0 text-xs font-medium px-3"
                 >
                   {isSaving ? (
                     <>
