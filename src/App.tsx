@@ -5,6 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Cases from "./pages/Cases";
+import Checklist from "./pages/Checklist";
+import Files from "./pages/Files";
 import NotFound from "./pages/NotFound";
 import ProjectDetails from "./pages/ProjectDetails";
 
@@ -18,6 +21,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/cases" element={<Cases />} />
+          <Route path="/checklist" element={<Checklist />} />
+          <Route path="/files" element={<Files />} />
           <Route path="/project-details/:conversationId" element={<ProjectDetails />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

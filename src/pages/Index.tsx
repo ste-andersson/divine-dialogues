@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AudioRecorder } from '@/components/AudioRecorder';
 import { ConversationDisplay } from '@/components/ConversationDisplay';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
+import { Navigation } from '@/components/Navigation';
 import useElevenLabs from "@/hooks/use-eleven-labs";
 import MicrophonePermission from "@/components/MicrophonePermission";
 
@@ -110,6 +111,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
       <div className="container mx-auto px-6 py-12">
         {/* Header med exakt denna titel */}
         <header className="text-center mb-16">
