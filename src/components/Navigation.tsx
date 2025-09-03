@@ -76,7 +76,7 @@ export const Navigation = () => {
                 {/* Desktop and iPad layout */}
                 <div className="hidden sm:block">
                   <span className="text-xs font-medium text-primary/80 mb-0.5">
-                    Valt ärende {selectedCase.caseNumber}
+                    Valt ärende: {selectedCase.caseNumber}
                   </span>
                   <div className="min-w-0">
                     <span className="text-sm font-semibold text-primary truncate block">
