@@ -101,12 +101,12 @@ const Index = () => {
   }, []);
 
   // Navigate to project details page when conversation ends and data is saved
-  useEffect(() => {
-    if (status === "disconnected" && conversationId) {
-      console.log("Conversation ended, navigating to project details page");
-      navigate(`/project-details/${conversationId}`);
-    }
-  }, [status, conversationId, navigate]);
+  // useEffect(() => {
+  //   if (status === "disconnected" && conversationId) {
+  //     console.log("Conversation ended, navigating to project details page");
+  //     navigate(`/project-details/${conversationId}`);
+  //   }
+  // }, [status, conversationId, navigate]);
 
   return (
     <div className="min-h-screen bg-background">
