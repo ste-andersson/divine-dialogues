@@ -11,7 +11,7 @@ export const Navigation = () => {
   const navigationItems = [
     { title: 'Ärenden', path: '/cases', icon: FileText },
     { title: 'Checklista/brister', path: '/checklist', icon: CheckSquare },
-    { title: 'Tillsynsassistenten', path: '/', icon: MessageCircle },
+    { title: 'Tillsynsassistenten', path: '/assistant', icon: MessageCircle },
     { title: 'Utkast', path: '/files', icon: FileText },
   ];
 
