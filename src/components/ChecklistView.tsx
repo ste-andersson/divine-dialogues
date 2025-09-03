@@ -1,10 +1,8 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
 import { checklistData } from '@/data/checklistData';
 import { useChecklistResponses } from '@/hooks/use-checklist-responses';
 import { ChecklistItem } from '@/types/checklist';
@@ -175,18 +173,22 @@ const ChecklistView = forwardRef<ChecklistViewRef>((props, ref) => {
                   <div>
                     <h4 className="font-medium mb-3">{item.id}. {item.question}</h4>
                     {item.options.length > 0 && (
-                      <RadioGroup
-                        value={item.answer || ''}
-                        onValueChange={(value) => handleAnswerChange(item.id, value)}
-                        className="flex flex-wrap gap-4"
-                      >
+                      <div className="flex gap-3 mb-4">
                         {item.options.map((option) => (
-                          <div key={option} className="flex items-center space-x-2">
-                            <RadioGroupItem value={option} id={`${item.id}-${option}`} />
-                            <Label htmlFor={`${item.id}-${option}`}>{option}</Label>
-                          </div>
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => handleAnswerChange(item.id, option)}
+                            className={`px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 min-w-[80px] ${
+                              item.answer === option
+                                ? 'bg-primary text-primary-foreground shadow-md'
+                                : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground border border-border'
+                            }`}
+                          >
+                            {option}
+                          </button>
                         ))}
-                      </RadioGroup>
+                      </div>
                     )}
                   </div>
                   <div>
