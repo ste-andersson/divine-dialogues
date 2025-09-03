@@ -81,38 +81,40 @@ const Checklist = () => {
         
         <main>
           {/* Sticky Toolbar */}
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-4 mb-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-md">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="checklist">Checklista</TabsTrigger>
-                  <TabsTrigger value="defects">Brister</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              
-              <Button 
-                onClick={handleSaveAll}
-                disabled={!hasUnsavedChanges || isSaving}
-                size="lg"
-                className="flex items-center gap-2 min-w-[200px] flex-shrink-0"
-              >
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    Sparar...
-                  </>
-                ) : hasUnsavedChanges ? (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Spara alla ändringar
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Allt sparat
-                  </>
-                )}
-              </Button>
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
+            <div className="py-6">
+              <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 max-w-4xl mx-auto">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-md">
+                  <TabsList className="grid w-full grid-cols-2 h-12">
+                    <TabsTrigger value="checklist" className="text-sm font-medium">Checklista</TabsTrigger>
+                    <TabsTrigger value="defects" className="text-sm font-medium">Brister</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                
+                <Button 
+                  onClick={handleSaveAll}
+                  disabled={!hasUnsavedChanges || isSaving}
+                  size="lg"
+                  className="flex items-center gap-2 min-w-[180px] h-12 flex-shrink-0 font-medium"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Sparar...
+                    </>
+                  ) : hasUnsavedChanges ? (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Spara ändringar
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Allt sparat
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
 
