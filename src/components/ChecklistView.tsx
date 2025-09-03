@@ -4,17 +4,23 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { checklistData } from '@/data/checklistData';
 import { useChecklistResponses } from '@/hooks/use-checklist-responses';
 import { ChecklistItem } from '@/types/checklist';
 import { useCase } from '@/contexts/CaseContext';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useToast } from '@/hooks/use-toast';
+import { Save, Check } from 'lucide-react';
 
 const ChecklistView = () => {
   const { selectedCase } = useCase();
-  const { responses, upsertResponse } = useChecklistResponses(selectedCase?.id || null);
+  const { responses, upsertResponse, isUpsertLoading } = useChecklistResponses(selectedCase?.id || null);
   const [localData, setLocalData] = useState<ChecklistItem[]>(checklistData);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const debouncedLocalData = useDebounce(localData, 1000);
+  const { toast } = useToast();
 
   // Merge database responses with checklist data
   useEffect(() => {
@@ -59,6 +65,7 @@ const ChecklistView = () => {
         item.id === itemId ? { ...item, answer } : item
       )
     );
+    setHasUnsavedChanges(true);
   };
 
   const handleCommentChange = (itemId: string, comment: string) => {
@@ -67,6 +74,51 @@ const ChecklistView = () => {
         item.id === itemId ? { ...item, comment } : item
       )
     );
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSave = async () => {
+    if (!selectedCase) return;
+    
+    setIsSaving(true);
+    try {
+      const changedItems = localData.filter((item, index) => {
+        const original = checklistData[index];
+        const response = responses.find(r => r.checklist_id === item.id);
+        return (
+          item.answer !== (response?.answer || null) ||
+          item.comment !== (response?.comment || '')
+        );
+      });
+
+      for (const item of changedItems) {
+        if (item.answer || item.comment) {
+          await new Promise<void>((resolve, reject) => {
+            upsertResponse({
+              checklistId: item.id,
+              answer: item.answer,
+              comment: item.comment,
+            });
+            // Simple timeout to simulate async operation
+            setTimeout(resolve, 100);
+          });
+        }
+      }
+
+      setHasUnsavedChanges(false);
+      toast({
+        title: "Sparat",
+        description: "Checklistan har sparats",
+      });
+    } catch (error) {
+      toast({
+        title: "Fel",
+        description: "Kunde inte spara checklistan",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!selectedCase) {
@@ -88,6 +140,37 @@ const ChecklistView = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between bg-card p-4 rounded-lg border">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold">Checklista</h2>
+          {hasUnsavedChanges && (
+            <span className="text-sm text-orange-600">• Osparade ändringar</span>
+          )}
+        </div>
+        <Button 
+          onClick={handleSave}
+          disabled={!hasUnsavedChanges || isSaving || isUpsertLoading}
+          className="flex items-center gap-2"
+        >
+          {isSaving || isUpsertLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Sparar...
+            </>
+          ) : hasUnsavedChanges ? (
+            <>
+              <Save className="w-4 h-4" />
+              Spara ändringar
+            </>
+          ) : (
+            <>
+              <Check className="w-4 h-4" />
+              Sparat
+            </>
+          )}
+        </Button>
+      </div>
+      
       {Object.entries(groupedItems).map(([section, items]) => (
         <Card key={section}>
           <CardHeader>

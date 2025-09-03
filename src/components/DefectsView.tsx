@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Save, Check } from 'lucide-react';
 import { useCaseDefects } from '@/hooks/use-case-defects';
 import { useCase } from '@/contexts/CaseContext';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useToast } from '@/hooks/use-toast';
 
 interface DefectInput {
   number: number;
@@ -15,9 +16,12 @@ interface DefectInput {
 
 const DefectsView = () => {
   const { selectedCase } = useCase();
-  const { defects, upsertDefect, deleteDefect } = useCaseDefects(selectedCase?.id || null);
+  const { defects, upsertDefect, deleteDefect, isUpsertLoading } = useCaseDefects(selectedCase?.id || null);
   const [localDefects, setLocalDefects] = useState<DefectInput[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const debouncedLocalDefects = useDebounce(localDefects, 1000);
+  const { toast } = useToast();
 
   // Initialize local defects from database
   useEffect(() => {
@@ -56,6 +60,43 @@ const DefectsView = () => {
         defect.number === number ? { ...defect, description } : defect
       )
     );
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSave = async () => {
+    if (!selectedCase) return;
+    
+    setIsSaving(true);
+    try {
+      for (const defect of localDefects) {
+        if (defect.description.trim()) {
+          const existingDefect = defects.find(d => d.defect_number === defect.number);
+          if (!existingDefect || existingDefect.description !== defect.description) {
+            await new Promise<void>((resolve) => {
+              upsertDefect({
+                defectNumber: defect.number,
+                description: defect.description.trim(),
+              });
+              setTimeout(resolve, 100);
+            });
+          }
+        }
+      }
+
+      setHasUnsavedChanges(false);
+      toast({
+        title: "Sparat",
+        description: "Bristerna har sparats",
+      });
+    } catch (error) {
+      toast({
+        title: "Fel",
+        description: "Kunde inte spara bristerna",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addDefect = () => {
@@ -85,16 +126,45 @@ const DefectsView = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Brister</h3>
-        <Button
-          onClick={addDefect}
-          disabled={localDefects.length >= 20}
-          size="sm"
-          variant="outline"
+      <div className="flex items-center justify-between bg-card p-4 rounded-lg border">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Brister</h3>
+            {hasUnsavedChanges && (
+              <span className="text-sm text-orange-600">• Osparade ändringar</span>
+            )}
+          </div>
+          <Button
+            onClick={addDefect}
+            disabled={localDefects.length >= 20}
+            size="sm"
+            variant="outline"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Lägg till brist ({localDefects.length}/20)
+          </Button>
+        </div>
+        <Button 
+          onClick={handleSave}
+          disabled={!hasUnsavedChanges || isSaving || isUpsertLoading}
+          className="flex items-center gap-2"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Lägg till brist ({localDefects.length}/20)
+          {isSaving || isUpsertLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Sparar...
+            </>
+          ) : hasUnsavedChanges ? (
+            <>
+              <Save className="w-4 h-4" />
+              Spara ändringar
+            </>
+          ) : (
+            <>
+              <Check className="w-4 h-4" />
+              Sparat
+            </>
+          )}
         </Button>
       </div>
 
