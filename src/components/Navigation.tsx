@@ -43,13 +43,13 @@ export const Navigation = () => {
     <nav className="bg-card border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center h-16 gap-4">
-          {/* Desktop and Tablet Navigation */}
-          <div className="hidden md:flex items-center space-x-4 flex-1">
+          {/* Desktop and Tablet Navigation - Always visible on screens 640px+ */}
+          <div className="hidden sm:flex items-center space-x-4 flex-1">
             <NavigationItems />
           </div>
           
-          {/* Mobile Navigation - Only for phones */}
-          <div className="flex md:hidden flex-1">
+          {/* Mobile Navigation - Only for very small screens */}
+          <div className="flex sm:hidden flex-1">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <button className="p-2 rounded-lg hover:bg-accent">
