@@ -27,28 +27,80 @@ const DefectsView = forwardRef<DefectsViewRef>((props, ref) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
+  // Debug function to compare GUI vs Database
+  const compareGuiVsDatabase = () => {
+    console.log('🔍 COMPARING GUI VS DATABASE:');
+    console.log('📊 Database defects:', defects.map(d => ({ number: d.defect_number, description: d.description })));
+    console.log('🖥️  GUI defects:', localDefects);
+    
+    const differences = [];
+    
+    // Check each local defect against database
+    localDefects.forEach(local => {
+      const dbDefect = defects.find(d => d.defect_number === local.number);
+      if (!dbDefect) {
+        differences.push(`⚠️  Defect ${local.number} exists in GUI but NOT in database`);
+      } else if (dbDefect.description !== local.description) {
+        differences.push(`⚠️  Defect ${local.number} differs: DB="${dbDefect.description}" vs GUI="${local.description}"`);
+      }
+    });
+    
+    // Check each database defect against GUI
+    defects.forEach(db => {
+      const guiDefect = localDefects.find(l => l.number === db.defect_number);
+      if (!guiDefect) {
+        differences.push(`⚠️  Defect ${db.defect_number} exists in DATABASE but NOT in GUI`);
+      }
+    });
+    
+    if (differences.length === 0) {
+      console.log('✅ GUI and Database are in sync!');
+    } else {
+      console.log('❌ DIFFERENCES FOUND:');
+      differences.forEach(diff => console.log(diff));
+    }
+  };
+
   // Initialize local defects from database when defects change
   useEffect(() => {
+    console.log('🔄 Database defects changed:', defects);
+    
     if (selectedCase) {
       if (defects.length > 0) {
         const defectInputs = defects.map(defect => ({
           number: defect.defect_number,
           description: defect.description,
         }));
+        
+        console.log('📊 Converting database defects to local state:', defectInputs);
         setLocalDefects(defectInputs);
       } else {
+        console.log('📝 No defects in database, creating empty defect');
         // Start with one empty defect if none exist
         setLocalDefects([{ number: 1, description: '' }]);
       }
       setHasUnsavedChanges(false);
+      console.log('✅ Local defects synchronized with database');
+      
+      // Compare GUI vs Database after sync
+      setTimeout(() => compareGuiVsDatabase(), 100);
     }
   }, [defects, selectedCase]);
 
   // Reset when case changes
   useEffect(() => {
+    console.log('🔄 Case changed:', selectedCase?.name || 'No case');
     setLocalDefects([]);
     setHasUnsavedChanges(false);
   }, [selectedCase?.id]);
+
+  // Expose compare function globally for debugging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).compareDefects = compareGuiVsDatabase;
+      console.log('🔧 Debug: Type "compareDefects()" in console to compare GUI vs Database');
+    }
+  }, [defects, localDefects]);
 
   const handleDefectChange = (number: number, description: string) => {
     setLocalDefects(prev => 
@@ -109,6 +161,12 @@ const DefectsView = forwardRef<DefectsViewRef>((props, ref) => {
 
       console.log(`🎉 Save complete! Saved ${savedCount} defects`);
       setHasUnsavedChanges(false);
+      
+      // Compare GUI vs Database after save to verify sync
+      setTimeout(() => {
+        console.log('🔍 Verifying sync after save...');
+        compareGuiVsDatabase();
+      }, 1000);
       
       toast({
         title: "Sparat",

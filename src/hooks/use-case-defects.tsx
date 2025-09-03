@@ -10,7 +10,12 @@ export const useCaseDefects = (caseId: string | null) => {
   const query = useQuery({
     queryKey: ['case-defects', caseId],
     queryFn: async (): Promise<CaseDefect[]> => {
-      if (!caseId) return [];
+      console.log('🔍 Fetching defects from database for case:', caseId);
+      
+      if (!caseId) {
+        console.log('❌ No caseId provided, returning empty array');
+        return [];
+      }
       
       const { data, error } = await supabase
         .from('case_defects')
@@ -19,9 +24,11 @@ export const useCaseDefects = (caseId: string | null) => {
         .order('defect_number', { ascending: true });
 
       if (error) {
+        console.error('❌ Database error:', error);
         throw error;
       }
 
+      console.log('📦 Fetched defects from database:', data);
       return data || [];
     },
     enabled: !!caseId,
