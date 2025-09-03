@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Plus, Trash2 } from 'lucide-react';
 import { useCaseDefects } from '@/hooks/use-case-defects';
 import { useCase } from '@/contexts/CaseContext';
-import { useDebounce } from '@/hooks/use-debounce';
 import { useToast } from '@/hooks/use-toast';
 
 interface DefectInput {
@@ -22,18 +21,15 @@ export interface DefectsViewRef {
 
 const DefectsView = forwardRef<DefectsViewRef>((props, ref) => {
   const { selectedCase } = useCase();
-  const { defects, upsertDefect, deleteDefect, isUpsertLoading } = useCaseDefects(selectedCase?.id || null);
+  const { defects, upsertDefect, deleteDefect, isUpsertLoading, isDeleteLoading } = useCaseDefects(selectedCase?.id || null);
   const [localDefects, setLocalDefects] = useState<DefectInput[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [deletingDefects, setDeletingDefects] = useState<Set<number>>(new Set());
-  const debouncedLocalDefects = useDebounce(localDefects, 1000);
   const { toast } = useToast();
 
-  // Initialize local defects from database only once
+  // Initialize local defects from database when defects change
   useEffect(() => {
-    if (!isInitialized && selectedCase) {
+    if (selectedCase) {
       if (defects.length > 0) {
         const defectInputs = defects.map(defect => ({
           number: defect.defect_number,
@@ -44,37 +40,15 @@ const DefectsView = forwardRef<DefectsViewRef>((props, ref) => {
         // Start with one empty defect if none exist
         setLocalDefects([{ number: 1, description: '' }]);
       }
-      setIsInitialized(true);
+      setHasUnsavedChanges(false);
     }
-  }, [defects, selectedCase, isInitialized]);
+  }, [defects, selectedCase]);
 
   // Reset when case changes
   useEffect(() => {
-    setIsInitialized(false);
     setLocalDefects([]);
     setHasUnsavedChanges(false);
-    setDeletingDefects(new Set());
   }, [selectedCase?.id]);
-
-  // Auto-save when defects change (but not for deleted ones)
-  useEffect(() => {
-    if (!selectedCase || !isInitialized) return;
-
-    debouncedLocalDefects.forEach(defect => {
-      // Skip if this defect is being deleted
-      if (deletingDefects.has(defect.number)) return;
-      
-      if (defect.description.trim()) {
-        const existingDefect = defects.find(d => d.defect_number === defect.number);
-        if (!existingDefect || existingDefect.description !== defect.description) {
-          upsertDefect({
-            defectNumber: defect.number,
-            description: defect.description.trim(),
-          });
-        }
-      }
-    });
-  }, [debouncedLocalDefects, selectedCase, defects, upsertDefect, isInitialized, deletingDefects]);
 
   const handleDefectChange = (number: number, description: string) => {
     setLocalDefects(prev => 
@@ -140,26 +114,15 @@ const DefectsView = forwardRef<DefectsViewRef>((props, ref) => {
   };
 
   const removeDefect = (number: number) => {
-    // Mark as being deleted to prevent auto-save
-    setDeletingDefects(prev => new Set([...prev, number]));
-    
     // Remove from local state
     setLocalDefects(prev => prev.filter(defect => defect.number !== number));
+    setHasUnsavedChanges(true);
     
     // Delete from database if it exists
     const existingDefect = defects.find(d => d.defect_number === number);
     if (existingDefect) {
       deleteDefect(number);
     }
-    
-    // Clean up deletion tracking after a delay
-    setTimeout(() => {
-      setDeletingDefects(prev => {
-        const next = new Set(prev);
-        next.delete(number);
-        return next;
-      });
-    }, 2000);
   };
 
   if (!selectedCase) {
