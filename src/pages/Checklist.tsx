@@ -82,35 +82,35 @@ const Checklist = () => {
         <main>
           {/* Sticky Toolbar */}
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
-            <div className="py-6">
-              <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 max-w-4xl mx-auto">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-md">
-                  <TabsList className="grid w-full grid-cols-2 h-12">
-                    <TabsTrigger value="checklist" className="text-sm font-medium">Checklista</TabsTrigger>
-                    <TabsTrigger value="defects" className="text-sm font-medium">Brister</TabsTrigger>
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between gap-4">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 max-w-xs">
+                  <TabsList className="grid w-full grid-cols-2 h-9">
+                    <TabsTrigger value="checklist" className="text-xs font-medium px-2">Checklista</TabsTrigger>
+                    <TabsTrigger value="defects" className="text-xs font-medium px-2">Brister</TabsTrigger>
                   </TabsList>
                 </Tabs>
                 
                 <Button 
                   onClick={handleSaveAll}
                   disabled={!hasUnsavedChanges || isSaving}
-                  size="lg"
-                  className="flex items-center gap-2 min-w-[180px] h-12 flex-shrink-0 font-medium"
+                  size="sm"
+                  className="flex items-center gap-1.5 min-w-[120px] h-9 flex-shrink-0 text-xs font-medium"
                 >
                   {isSaving ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       Sparar...
                     </>
                   ) : hasUnsavedChanges ? (
                     <>
-                      <Save className="w-4 h-4" />
-                      Spara ändringar
+                      <Save className="w-3 h-3" />
+                      Spara
                     </>
                   ) : (
                     <>
-                      <Check className="w-4 h-4" />
-                      Allt sparat
+                      <Check className="w-3 h-3" />
+                      Sparat
                     </>
                   )}
                 </Button>
