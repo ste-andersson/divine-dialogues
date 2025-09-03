@@ -66,29 +66,56 @@ const DefectsView = forwardRef<DefectsViewRef>((props, ref) => {
   }));
 
   const handleSave = async () => {
-    if (!selectedCase) return;
+    if (!selectedCase) {
+      console.log('❌ No case selected, cannot save');
+      return;
+    }
+    
+    console.log('🚀 Starting save process...');
+    console.log('📝 Local defects:', localDefects);
     
     setIsSaving(true);
     try {
       const defectsToSave = localDefects.filter(defect => defect.description.trim());
+      console.log('💾 Defects to save:', defectsToSave);
       
-      // Save each defect sequentially and wait for completion
+      let savedCount = 0;
+      
+      // Save each defect that has changes
       for (const defect of defectsToSave) {
         const existingDefect = defects.find(d => d.defect_number === defect.number);
-        if (!existingDefect || existingDefect.description !== defect.description) {
-          await upsertDefect({
+        const hasChanges = !existingDefect || existingDefect.description !== defect.description;
+        
+        console.log(`🔍 Defect ${defect.number}:`, {
+          existing: existingDefect?.description,
+          new: defect.description,
+          hasChanges
+        });
+        
+        if (hasChanges) {
+          console.log(`⏳ Saving defect ${defect.number}...`);
+          
+          const result = await upsertDefect({
             defectNumber: defect.number,
             description: defect.description.trim(),
           });
+          
+          console.log(`✅ Saved defect ${defect.number}:`, result);
+          savedCount++;
+        } else {
+          console.log(`⏭️  Skipping defect ${defect.number} (no changes)`);
         }
       }
 
+      console.log(`🎉 Save complete! Saved ${savedCount} defects`);
       setHasUnsavedChanges(false);
+      
       toast({
         title: "Sparat",
-        description: "Bristerna har sparats",
+        description: `${savedCount} brister har sparats`,
       });
     } catch (error) {
+      console.error('❌ Save failed:', error);
       toast({
         title: "Fel",
         description: "Kunde inte spara bristerna",
@@ -96,6 +123,7 @@ const DefectsView = forwardRef<DefectsViewRef>((props, ref) => {
       });
     } finally {
       setIsSaving(false);
+      console.log('🏁 Save process finished');
     }
   };
 
