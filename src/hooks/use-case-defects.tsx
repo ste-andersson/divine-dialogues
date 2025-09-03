@@ -40,6 +40,8 @@ export const useCaseDefects = (caseId: string | null) => {
           case_id: caseId,
           defect_number: defectNumber,
           description,
+        }, {
+          onConflict: 'case_id,defect_number'
         })
         .select()
         .single();

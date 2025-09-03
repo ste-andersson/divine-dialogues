@@ -41,6 +41,8 @@ export const useChecklistResponses = (caseId: string | null) => {
           checklist_id: checklistId,
           answer,
           comment,
+        }, {
+          onConflict: 'case_id,checklist_id'
         })
         .select()
         .single();

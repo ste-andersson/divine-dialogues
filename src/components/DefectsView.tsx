@@ -68,20 +68,25 @@ const DefectsView = () => {
     
     setIsSaving(true);
     try {
-      for (const defect of localDefects) {
-        if (defect.description.trim()) {
-          const existingDefect = defects.find(d => d.defect_number === defect.number);
-          if (!existingDefect || existingDefect.description !== defect.description) {
-            await new Promise<void>((resolve) => {
-              upsertDefect({
-                defectNumber: defect.number,
-                description: defect.description.trim(),
-              });
-              setTimeout(resolve, 100);
+      const defectsToSave = localDefects.filter(defect => defect.description.trim());
+      
+      const savePromises = defectsToSave.map(defect => {
+        const existingDefect = defects.find(d => d.defect_number === defect.number);
+        if (!existingDefect || existingDefect.description !== defect.description) {
+          return new Promise<void>((resolve, reject) => {
+            upsertDefect({
+              defectNumber: defect.number,
+              description: defect.description.trim(),
+            }, {
+              onSuccess: () => resolve(),
+              onError: (error) => reject(error)
             });
-          }
+          });
         }
-      }
+        return Promise.resolve();
+      });
+
+      await Promise.all(savePromises);
 
       setHasUnsavedChanges(false);
       toast({

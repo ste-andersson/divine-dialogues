@@ -91,19 +91,22 @@ const ChecklistView = () => {
         );
       });
 
-      for (const item of changedItems) {
-        if (item.answer || item.comment) {
-          await new Promise<void>((resolve, reject) => {
+      const savePromises = changedItems
+        .filter(item => item.answer || item.comment)
+        .map(item => 
+          new Promise<void>((resolve, reject) => {
             upsertResponse({
               checklistId: item.id,
               answer: item.answer,
               comment: item.comment,
+            }, {
+              onSuccess: () => resolve(),
+              onError: (error) => reject(error)
             });
-            // Simple timeout to simulate async operation
-            setTimeout(resolve, 100);
-          });
-        }
-      }
+          })
+        );
+
+      await Promise.all(savePromises);
 
       setHasUnsavedChanges(false);
       toast({
