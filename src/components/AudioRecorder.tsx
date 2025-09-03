@@ -1,39 +1,49 @@
-import { useState } from 'react';
 import { Phone, PhoneOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export const AudioRecorder = () => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [sttStatus, setSttStatus] = useState('disconnected'); // connected/connecting/error/disconnected
+interface AudioRecorderProps {
+  status: string;
+  isSpeaking: boolean;
+  isMuted: boolean;
+  isStarted: boolean;
+  permissionGranted: boolean | null;
+  onStart: () => void;
+  onToggleMute: () => void;
+}
 
-  const handleRecordToggle = () => {
-    setIsRecording(!isRecording);
-  };
-
-  const isConnected = sttStatus === 'connected';
-  const isConnecting = sttStatus === 'connecting';
+export const AudioRecorder = ({ 
+  status, 
+  isSpeaking, 
+  isMuted, 
+  isStarted, 
+  permissionGranted, 
+  onStart, 
+  onToggleMute 
+}: AudioRecorderProps) => {
+  const isConnected = status === 'connected';
+  const isConnecting = status === 'connecting';
 
   return (
     <div className="flex flex-col items-center space-y-4">
       <Button
-        onClick={handleRecordToggle}
-        disabled={!isConnected || isConnecting}
-        variant={isRecording ? "destructive" : "default"}
+        onClick={onStart}
+        disabled={permissionGranted !== true}
+        variant={isStarted ? "destructive" : "default"}
         size="lg"
         className={`relative w-20 h-20 rounded-full transition-all duration-300 ${
-          isRecording 
+          isStarted && isConnected
             ? 'bg-recording hover:bg-recording/90 animate-pulse-recording shadow-lg' 
             : 'bg-primary hover:bg-primary/90 hover:scale-105 shadow-md hover:shadow-lg'
         }`}
       >
-        {isRecording ? (
+        {isStarted && isConnected ? (
           <PhoneOff className="w-8 h-8" />
         ) : (
           <Phone className="w-8 h-8" />
         )}
         
         {/* Animerad ring vid inspelning */}
-        {isRecording && (
+        {isSpeaking && (
           <div className="absolute inset-0 rounded-full bg-recording/20 animate-ping" />
         )}
       </Button>
@@ -42,9 +52,9 @@ export const AudioRecorder = () => {
       <div className="text-center">
         <p className="text-xs text-muted-foreground">
           Status: {
-            sttStatus === 'connected' ? 'Ansluten' :
-            sttStatus === 'connecting' ? 'Ansluter...' :
-            sttStatus === 'error' ? 'Fel' : 'Frånkopplad'
+            status === 'connected' ? 'Ansluten' :
+            status === 'connecting' ? 'Ansluter...' :
+            status === 'error' ? 'Fel' : 'Frånkopplad'
           }
         </p>
       </div>

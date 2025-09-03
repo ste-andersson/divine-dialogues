@@ -1,11 +1,63 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import { AudioRecorder } from '@/components/AudioRecorder';
 import { ConversationDisplay } from '@/components/ConversationDisplay';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
+import useElevenLabs from "@/hooks/use-eleven-labs";
+import MicrophonePermission from "@/components/MicrophonePermission";
 
 const Index = () => {
-  const [messages, setMessages] = useState([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
+  const navigate = useNavigate();
+  
+  const {
+    conversation,
+    isStarted,
+    isMuted,
+    dataCollection,
+    isLoadingData,
+    savedToDatabase,
+    messages,
+    startConversation,
+    toggleMute,
+    conversationId
+  } = useElevenLabs();
+
+  const { status, isSpeaking } = conversation;
+
+  // Check microphone permission
+  useEffect(() => {
+    const checkMicrophonePermission = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const hasMicrophone = devices.some(device => device.kind === 'audioinput');
+        
+        if (!hasMicrophone) {
+          console.log("No microphone detected");
+          setPermissionGranted(false);
+          return;
+        }
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        console.log("Microphone permission granted");
+        setPermissionGranted(true);
+      } catch (error) {
+        console.error("Error checking microphone permission:", error);
+        setPermissionGranted(false);
+      }
+    };
+
+    checkMicrophonePermission();
+  }, []);
+
+  // Navigate to project details page when conversation ends and data is saved
+  useEffect(() => {
+    if (status === "disconnected" && conversationId) {
+      console.log("Conversation ended, navigating to project details page");
+      navigate(`/project-details/${conversationId}`);
+    }
+  }, [status, conversationId, navigate]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -17,22 +69,36 @@ const Index = () => {
           </h1>
         </header>
 
-        {/* Main Content - exakt denna layout */}
-        <main className="space-y-12">
-          {/* Controls Section - ConnectionStatus TILL VÄNSTER, AudioRecorder TILL HÖGER */}
-          <div className="flex justify-center items-center gap-8">
-            <ConnectionStatus />
-            <AudioRecorder />
-          </div>
+        <MicrophonePermission permissionGranted={permissionGranted} />
 
-          {/* Conversation Display - centrerat under */}
-          <div className="flex justify-center">
-            <ConversationDisplay 
-              messages={messages} 
-              isProcessing={isProcessing} 
-            />
-          </div>
-        </main>
+        {permissionGranted !== false && (
+          <main className="space-y-12">
+            {/* Controls Section - ConnectionStatus TILL VÄNSTER, AudioRecorder TILL HÖGER */}
+            <div className="flex justify-center items-center gap-8">
+              <ConnectionStatus 
+                status={status}
+                isSpeaking={isSpeaking}
+              />
+              <AudioRecorder 
+                status={status}
+                isSpeaking={isSpeaking}
+                isMuted={isMuted}
+                isStarted={isStarted}
+                permissionGranted={permissionGranted}
+                onStart={startConversation}
+                onToggleMute={toggleMute}
+              />
+            </div>
+
+            {/* Conversation Display - centrerat under */}
+            <div className="flex justify-center">
+              <ConversationDisplay 
+                messages={messages} 
+                isProcessing={isSpeaking}
+              />
+            </div>
+          </main>
+        )}
       </div>
     </div>
   );

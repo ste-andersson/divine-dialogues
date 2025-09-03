@@ -1,11 +1,16 @@
-import { useState } from 'react';
 import { Wifi, WifiOff, Loader2, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-export const ConnectionStatus = () => {
-  const [sttStatus, setSttStatus] = useState('disconnected');
-  const [ttsStatus, setTtsStatus] = useState('disconnected');
+interface ConnectionStatusProps {
+  status: string;
+  isSpeaking: boolean;
+}
+
+export const ConnectionStatus = ({ status, isSpeaking }: ConnectionStatusProps) => {
+  // Alltid visa som ansluten som du ville
+  const sttStatus = status === 'connected' ? 'connected' : status === 'connecting' ? 'connecting' : 'connected';
+  const ttsStatus = status === 'connected' ? 'connected' : status === 'connecting' ? 'connecting' : 'connected';
 
   const getStatusIcon = (status: string) => {
     switch (status) {

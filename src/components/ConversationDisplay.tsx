@@ -3,14 +3,10 @@ import { User, Bot, MessageCircle, Play } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { formatDistanceToNow } from 'date-fns';
-import { sv } from 'date-fns/locale';
 
 interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
+  role: string;
+  content: string;
 }
 
 interface ConversationDisplayProps {
@@ -49,19 +45,19 @@ export const ConversationDisplay = ({ messages, isProcessing }: ConversationDisp
       {/* Scrollable meddelanden */}
       <ScrollArea ref={scrollAreaRef} className="h-[400px] p-4">
         <div className="space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+          {messages.map((message, index) => (
+            <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] rounded-2xl p-4 ${
-                message.sender === 'user'
+                message.role === 'user'
                   ? 'bg-primary text-primary-foreground ml-12'
                   : 'bg-secondary text-secondary-foreground mr-12'
               }`}>
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.sender === 'user' ? 'bg-primary-foreground/20' : 'bg-secondary-foreground/20'
+                    message.role === 'user' ? 'bg-primary-foreground/20' : 'bg-secondary-foreground/20'
                   }`}>
-                    {message.sender === 'user' ? (
+                    {message.role === 'user' ? (
                       <User className="w-4 h-4" />
                     ) : (
                       <Bot className="w-4 h-4" />
@@ -70,17 +66,14 @@ export const ConversationDisplay = ({ messages, isProcessing }: ConversationDisp
                   
                   {/* Meddelandeinnehåll */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm leading-relaxed break-words">{message.text}</p>
+                    <p className="text-sm leading-relaxed break-words">{message.content}</p>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs opacity-70">
-                        {formatDistanceToNow(message.timestamp, { 
-                          addSuffix: true, 
-                          locale: sv 
-                        })}
+                        Just nu
                       </span>
-                      {message.sender === 'ai' && (
+                      {message.role === 'assistant' && (
                         <Button 
-                          onClick={() => handlePlayMessage(message.text)}
+                          onClick={() => handlePlayMessage(message.content)}
                           variant="ghost" 
                           size="sm" 
                           className="h-6 px-2 hover:bg-secondary-foreground/10"
