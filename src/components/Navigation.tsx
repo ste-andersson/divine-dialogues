@@ -48,8 +48,8 @@ export const Navigation = () => {
             <NavigationItems />
           </div>
           
-          {/* Mobile Navigation */}
-          <div className="md:hidden flex-1">
+          {/* Mobile Navigation - Only for phones */}
+          <div className="flex md:hidden flex-1">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <button className="p-2 rounded-lg hover:bg-accent">
