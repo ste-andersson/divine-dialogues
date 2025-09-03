@@ -43,13 +43,8 @@ export const Navigation = () => {
     <nav className="bg-card border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center h-16 gap-4">
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-4 flex-1">
-            <NavigationItems />
-          </div>
-          
-          {/* Tablet Navigation */}
-          <div className="hidden md:flex lg:hidden items-center space-x-2 flex-1">
+          {/* Desktop and Tablet Navigation */}
+          <div className="hidden md:flex items-center space-x-4 flex-1">
             <NavigationItems />
           </div>
           
