@@ -1,13 +1,56 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import ChecklistView from '@/components/ChecklistView';
-import DefectsView from '@/components/DefectsView';
+import { Button } from '@/components/ui/button';
+import { Save, Check } from 'lucide-react';
+import ChecklistView, { ChecklistViewRef } from '@/components/ChecklistView';
+import DefectsView, { DefectsViewRef } from '@/components/DefectsView';
 import { useCase } from '@/contexts/CaseContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Checklist = () => {
   const { selectedCase } = useCase();
   const [activeTab, setActiveTab] = useState('checklist');
+  const checklistRef = useRef<ChecklistViewRef>(null);
+  const defectsRef = useRef<DefectsViewRef>(null);
+  const { toast } = useToast();
+
+  const hasUnsavedChanges = 
+    (checklistRef.current?.hasUnsavedChanges || false) ||
+    (defectsRef.current?.hasUnsavedChanges || false);
+
+  const isSaving = 
+    (checklistRef.current?.isSaving || false) ||
+    (defectsRef.current?.isSaving || false);
+
+  const handleSaveAll = async () => {
+    try {
+      const savePromises: Promise<void>[] = [];
+      
+      if (checklistRef.current?.hasUnsavedChanges) {
+        savePromises.push(checklistRef.current.save());
+      }
+      
+      if (defectsRef.current?.hasUnsavedChanges) {
+        savePromises.push(defectsRef.current.save());
+      }
+
+      if (savePromises.length === 0) return;
+
+      await Promise.all(savePromises);
+
+      toast({
+        title: "Sparat",
+        description: "Alla ändringar har sparats",
+      });
+    } catch (error) {
+      toast({
+        title: "Fel",
+        description: "Kunde inte spara alla ändringar",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,13 +80,40 @@ const Checklist = () => {
             </div>
             
             <TabsContent value="checklist" className="mt-0">
-              <ChecklistView />
+              <ChecklistView ref={checklistRef} />
             </TabsContent>
             
             <TabsContent value="defects" className="mt-0">
-              <DefectsView />
+              <DefectsView ref={defectsRef} />
             </TabsContent>
           </Tabs>
+
+          {/* Unified Save Button */}
+          <div className="mt-8 flex justify-center">
+            <Button 
+              onClick={handleSaveAll}
+              disabled={!hasUnsavedChanges || isSaving}
+              size="lg"
+              className="flex items-center gap-2 min-w-[200px]"
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Sparar...
+                </>
+              ) : hasUnsavedChanges ? (
+                <>
+                  <Save className="w-4 h-4" />
+                  Spara alla ändringar
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Allt sparat
+                </>
+              )}
+            </Button>
+          </div>
         </main>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -11,9 +11,14 @@ import { ChecklistItem } from '@/types/checklist';
 import { useCase } from '@/contexts/CaseContext';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Check } from 'lucide-react';
 
-const ChecklistView = () => {
+export interface ChecklistViewRef {
+  save: () => Promise<void>;
+  hasUnsavedChanges: boolean;
+  isSaving: boolean;
+}
+
+const ChecklistView = forwardRef<ChecklistViewRef>((props, ref) => {
   const { selectedCase } = useCase();
   const { responses, upsertResponse, isUpsertLoading } = useChecklistResponses(selectedCase?.id || null);
   const [localData, setLocalData] = useState<ChecklistItem[]>(checklistData);
@@ -124,6 +129,12 @@ const ChecklistView = () => {
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    save: handleSave,
+    hasUnsavedChanges,
+    isSaving: isSaving || isUpsertLoading,
+  }));
+
   if (!selectedCase) {
     return (
       <div className="text-center py-8">
@@ -150,28 +161,6 @@ const ChecklistView = () => {
             <span className="text-sm text-orange-600">• Osparade ändringar</span>
           )}
         </div>
-        <Button 
-          onClick={handleSave}
-          disabled={!hasUnsavedChanges || isSaving || isUpsertLoading}
-          className="flex items-center gap-2"
-        >
-          {isSaving || isUpsertLoading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              Sparar...
-            </>
-          ) : hasUnsavedChanges ? (
-            <>
-              <Save className="w-4 h-4" />
-              Spara ändringar
-            </>
-          ) : (
-            <>
-              <Check className="w-4 h-4" />
-              Sparat
-            </>
-          )}
-        </Button>
       </div>
       
       {Object.entries(groupedItems).map(([section, items]) => (
@@ -221,6 +210,6 @@ const ChecklistView = () => {
       ))}
     </div>
   );
-};
+});
 
 export default ChecklistView;

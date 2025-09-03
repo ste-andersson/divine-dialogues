@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Save, Check } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useCaseDefects } from '@/hooks/use-case-defects';
 import { useCase } from '@/contexts/CaseContext';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -14,7 +14,13 @@ interface DefectInput {
   description: string;
 }
 
-const DefectsView = () => {
+export interface DefectsViewRef {
+  save: () => Promise<void>;
+  hasUnsavedChanges: boolean;
+  isSaving: boolean;
+}
+
+const DefectsView = forwardRef<DefectsViewRef>((props, ref) => {
   const { selectedCase } = useCase();
   const { defects, upsertDefect, deleteDefect, isUpsertLoading } = useCaseDefects(selectedCase?.id || null);
   const [localDefects, setLocalDefects] = useState<DefectInput[]>([]);
@@ -62,6 +68,12 @@ const DefectsView = () => {
     );
     setHasUnsavedChanges(true);
   };
+
+  useImperativeHandle(ref, () => ({
+    save: handleSave,
+    hasUnsavedChanges,
+    isSaving: isSaving || isUpsertLoading,
+  }));
 
   const handleSave = async () => {
     if (!selectedCase) return;
@@ -149,28 +161,6 @@ const DefectsView = () => {
             Lägg till brist ({localDefects.length}/20)
           </Button>
         </div>
-        <Button 
-          onClick={handleSave}
-          disabled={!hasUnsavedChanges || isSaving || isUpsertLoading}
-          className="flex items-center gap-2"
-        >
-          {isSaving || isUpsertLoading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              Sparar...
-            </>
-          ) : hasUnsavedChanges ? (
-            <>
-              <Save className="w-4 h-4" />
-              Spara ändringar
-            </>
-          ) : (
-            <>
-              <Check className="w-4 h-4" />
-              Sparat
-            </>
-          )}
-        </Button>
       </div>
 
       <div className="space-y-4">
@@ -220,6 +210,6 @@ const DefectsView = () => {
       )}
     </div>
   );
-};
+});
 
 export default DefectsView;
