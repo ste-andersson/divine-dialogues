@@ -80,14 +80,43 @@ const Checklist = () => {
         </header>
         
         <main>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="flex justify-center mb-8">
-              <TabsList className="grid w-full max-w-md grid-cols-2">
-                <TabsTrigger value="checklist">Checklista</TabsTrigger>
-                <TabsTrigger value="defects">Brister</TabsTrigger>
-              </TabsList>
+          {/* Sticky Toolbar */}
+          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-4 mb-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-md">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="checklist">Checklista</TabsTrigger>
+                  <TabsTrigger value="defects">Brister</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              
+              <Button 
+                onClick={handleSaveAll}
+                disabled={!hasUnsavedChanges || isSaving}
+                size="lg"
+                className="flex items-center gap-2 min-w-[200px] flex-shrink-0"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Sparar...
+                  </>
+                ) : hasUnsavedChanges ? (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Spara alla ändringar
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Allt sparat
+                  </>
+                )}
+              </Button>
             </div>
-            
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsContent value="checklist" className="mt-0">
               <ChecklistView ref={checklistRef} />
             </TabsContent>
@@ -96,33 +125,6 @@ const Checklist = () => {
               <DefectsView ref={defectsRef} />
             </TabsContent>
           </Tabs>
-
-          {/* Unified Save Button */}
-          <div className="mt-8 flex justify-center">
-            <Button 
-              onClick={handleSaveAll}
-              disabled={!hasUnsavedChanges || isSaving}
-              size="lg"
-              className="flex items-center gap-2 min-w-[200px]"
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Sparar...
-                </>
-              ) : hasUnsavedChanges ? (
-                <>
-                  <Save className="w-4 h-4" />
-                  Spara alla ändringar
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  Allt sparat
-                </>
-              )}
-            </Button>
-          </div>
         </main>
       </div>
     </div>
