@@ -32,7 +32,7 @@ export const Navigation = () => {
             }`
           }
         >
-          <item.icon className="w-4 h-4" />
+          <item.icon className="w-4 h-4 flex-shrink-0" />
           <span>{item.title}</span>
         </NavLink>
       ))}
