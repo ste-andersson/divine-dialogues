@@ -1,17 +1,51 @@
 .documentContainer {
-  width: 794px; /* A4 width in pixels at 96 DPI */
+  width: 100%;
+  max-width: 794px; /* A4 width in pixels at 96 DPI */
   margin: 0 auto;
   background: white;
   font-family: 'Times New Roman', serif;
   font-size: 12pt;
   line-height: 1.15;
   color: black;
+  transform-origin: top center;
+}
+
+/* Scale down on tablets */
+@media (max-width: 1024px) and (min-width: 641px) {
+  .documentContainer {
+    transform: scale(0.8);
+    margin: -10% auto;
+  }
+}
+
+/* Scale down more on mobile phones */
+@media (max-width: 640px) {
+  .documentContainer {
+    transform: scale(0.6);
+    margin: -20% auto;
+    font-size: 11pt;
+  }
 }
 
 .documentPage {
   padding: 96px 75px; /* ~2.5cm margins */
   min-height: 1123px; /* A4 height */
   background: white;
+}
+
+/* Smaller padding on tablets */
+@media (max-width: 1024px) and (min-width: 641px) {
+  .documentPage {
+    padding: 60px 50px;
+  }
+}
+
+/* Even smaller padding on mobile */
+@media (max-width: 640px) {
+  .documentPage {
+    padding: 40px 30px;
+    min-height: auto;
+  }
 }
 
 .documentHeader {
