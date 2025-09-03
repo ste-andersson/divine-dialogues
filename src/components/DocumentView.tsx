@@ -62,10 +62,6 @@ const DocumentView: React.FC<DocumentViewProps> = ({
               <span className={styles.infoLabel}>Adress:</span>
               <span className={styles.infoValue}>{selectedCase.address}</span>
             </div>
-            <div className={styles.infoRow}>
-              <span className={styles.infoLabel}>Kontrollant:</span>
-              <span className={styles.infoValue}>RSG</span>
-            </div>
           </div>
         </div>
 
@@ -174,19 +170,6 @@ const DocumentView: React.FC<DocumentViewProps> = ({
 
         {/* Footer */}
         <div className={styles.documentFooter}>
-          <div className={styles.signatureSection}>
-            <div className={styles.datePlace}>
-              <span>Göteborg {today}</span>
-            </div>
-            <div className={styles.signatureLine}>
-              <div className={styles.signatureSpace}></div>
-              <div className={styles.signatureLabel}>
-                Räddningstjänsten Storgöteborg<br />
-                Brandingenjör
-              </div>
-            </div>
-          </div>
-          
           <div className={styles.contactInfo}>
             <p><strong>Räddningstjänsten Storgöteborg</strong></p>
             <p>Olof Asklunds gata 13</p>
