@@ -1,5 +1,4 @@
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Agent = {
@@ -30,28 +29,24 @@ export const AgentSelector = ({ selectedAgent, onAgentChange, disabled }: AgentS
         <CardTitle className="text-sm font-medium">Välj tillsynsassistent</CardTitle>
       </CardHeader>
       <CardContent>
-        <RadioGroup
-          value={selectedAgent}
+        <Tabs 
+          value={selectedAgent} 
           onValueChange={onAgentChange}
-          disabled={disabled}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4"
+          className="w-full"
         >
-          {agents.map((agent) => (
-            <div key={agent.id} className="flex items-center space-x-2">
-              <RadioGroupItem
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1 h-auto p-1">
+            {agents.map((agent) => (
+              <TabsTrigger
+                key={agent.id}
                 value={agent.id}
-                id={agent.id}
-                className="peer"
-              />
-              <Label
-                htmlFor={agent.id}
-                className="text-sm font-medium cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                disabled={disabled}
+                className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 {agent.name}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </CardContent>
     </Card>
   );
