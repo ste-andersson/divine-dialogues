@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, RefreshCw } from 'lucide-react';
+import { Trash2, RefreshCw, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -37,6 +37,7 @@ interface CaseDefect {
 
 const AdminDefects = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingResponsesCaseId, setDeletingResponsesCaseId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -92,6 +93,39 @@ const AdminDefects = () => {
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     deleteMutation.mutate(id);
+  };
+
+  const deleteResponsesMutation = useMutation({
+    mutationFn: async (caseId: string) => {
+      const { error } = await supabase
+        .from('checklist_responses')
+        .delete()
+        .eq('case_id', caseId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Raderat",
+        description: "Alla checklistsvar för detta case har raderats från databasen",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fel",
+        description: "Kunde inte radera checklistsvar",
+        variant: "destructive",
+      });
+      console.error('Delete responses error:', error);
+    },
+    onSettled: () => {
+      setDeletingResponsesCaseId(null);
+    }
+  });
+
+  const handleDeleteResponses = async (caseId: string) => {
+    setDeletingResponsesCaseId(caseId);
+    deleteResponsesMutation.mutate(caseId);
   };
 
   const handleRefresh = () => {
@@ -174,6 +208,41 @@ const AdminDefects = () => {
                     <Badge variant="outline" className="text-xs">
                       {defect.case_id.slice(0, 8)}...
                     </Badge>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={deletingResponsesCaseId === defect.case_id}
+                          className="text-orange-600 border-orange-200 hover:bg-orange-50"
+                        >
+                          {deletingResponsesCaseId === defect.case_id ? (
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Radera alla checklistsvar?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Detta kommer permanent radera ALLA checklistsvar som är kopplade till case 
+                            {defect.case && ` "${defect.case.name}"`} från databasen. 
+                            Denna åtgärd kan inte ångras.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteResponses(defect.case_id)}
+                            className="bg-orange-600 text-white hover:bg-orange-700"
+                          >
+                            Radera alla svar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
