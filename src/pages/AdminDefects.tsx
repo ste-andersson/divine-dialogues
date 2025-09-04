@@ -4,7 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, RefreshCw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Trash2, RefreshCw, Plus, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -17,6 +20,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface CaseDefect {
   id: string;
@@ -43,9 +53,22 @@ interface CaseWithResponses {
   response_count: number;
 }
 
+interface Case {
+  id: string;
+  name: string;
+  case_number: string;
+  address: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const AdminDefects = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingResponsesCaseId, setDeletingResponsesCaseId] = useState<string | null>(null);
+  const [deletingCaseId, setDeletingCaseId] = useState<string | null>(null);
+  const [editingCase, setEditingCase] = useState<Case | null>(null);
+  const [isAddingCase, setIsAddingCase] = useState(false);
+  const [caseForm, setCaseForm] = useState({ name: '', case_number: '', address: '' });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -94,6 +117,19 @@ const AdminDefects = () => {
       })).filter((caseItem: CaseWithResponses) => caseItem.response_count > 0);
       
       return casesWithCounts.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  });
+
+  const { data: allCases, isLoading: isLoadingCases } = useQuery({
+    queryKey: ['all-cases'],
+    queryFn: async (): Promise<Case[]> => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
     }
   });
 
@@ -165,12 +201,143 @@ const AdminDefects = () => {
     deleteResponsesMutation.mutate(caseId);
   };
 
+  const deleteCaseMutation = useMutation({
+    mutationFn: async (caseId: string) => {
+      // First delete all checklist responses
+      await supabase
+        .from('checklist_responses')
+        .delete()
+        .eq('case_id', caseId);
+
+      // Then delete all case defects
+      await supabase
+        .from('case_defects')
+        .delete()
+        .eq('case_id', caseId);
+
+      // Finally delete the case
+      const { error } = await supabase
+        .from('cases')
+        .delete()
+        .eq('id', caseId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-cases'] });
+      queryClient.invalidateQueries({ queryKey: ['cases-with-responses'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-case-defects'] });
+      toast({
+        title: "Raderat",
+        description: "Ärendet och alla kopplade data har raderats",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fel",
+        description: "Kunde inte radera ärendet",
+        variant: "destructive",
+      });
+      console.error('Delete case error:', error);
+    },
+    onSettled: () => {
+      setDeletingCaseId(null);
+    }
+  });
+
+  const createCaseMutation = useMutation({
+    mutationFn: async (caseData: { name: string; case_number: string; address: string }) => {
+      const { error } = await supabase
+        .from('cases')
+        .insert(caseData);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-cases'] });
+      setCaseForm({ name: '', case_number: '', address: '' });
+      setIsAddingCase(false);
+      toast({
+        title: "Skapat",
+        description: "Nytt ärende har skapats",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fel",
+        description: "Kunde inte skapa ärendet",
+        variant: "destructive",
+      });
+      console.error('Create case error:', error);
+    }
+  });
+
+  const updateCaseMutation = useMutation({
+    mutationFn: async ({ id, ...caseData }: { id: string; name: string; case_number: string; address: string }) => {
+      const { error } = await supabase
+        .from('cases')
+        .update(caseData)
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-cases'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-case-defects'] });
+      setEditingCase(null);
+      setCaseForm({ name: '', case_number: '', address: '' });
+      toast({
+        title: "Uppdaterat",
+        description: "Ärendet har uppdaterats",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fel",
+        description: "Kunde inte uppdatera ärendet",
+        variant: "destructive",
+      });
+      console.error('Update case error:', error);
+    }
+  });
+
+  const handleDeleteCase = async (caseId: string) => {
+    setDeletingCaseId(caseId);
+    deleteCaseMutation.mutate(caseId);
+  };
+
+  const handleCreateCase = () => {
+    createCaseMutation.mutate(caseForm);
+  };
+
+  const handleUpdateCase = () => {
+    if (editingCase) {
+      updateCaseMutation.mutate({ id: editingCase.id, ...caseForm });
+    }
+  };
+
+  const startEditing = (caseItem: Case) => {
+    setEditingCase(caseItem);
+    setCaseForm({
+      name: caseItem.name,
+      case_number: caseItem.case_number,
+      address: caseItem.address
+    });
+  };
+
+  const resetForm = () => {
+    setCaseForm({ name: '', case_number: '', address: '' });
+    setEditingCase(null);
+    setIsAddingCase(false);
+  };
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['admin-case-defects'] });
     queryClient.invalidateQueries({ queryKey: ['cases-with-responses'] });
+    queryClient.invalidateQueries({ queryKey: ['all-cases'] });
   };
 
-  if (isLoading || isLoadingResponses) {
+  if (isLoading || isLoadingResponses || isLoadingCases) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="container mx-auto">
@@ -216,6 +383,190 @@ const AdminDefects = () => {
               <RefreshCw className="w-4 h-4 mr-2" />
               Uppdatera
             </Button>
+          </div>
+        </div>
+
+        {/* Cases Management Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">Ärendehantering</h2>
+            <Dialog open={isAddingCase} onOpenChange={setIsAddingCase}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Lägg till ärende
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Lägg till nytt ärende</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Namn</Label>
+                    <Input
+                      id="name"
+                      value={caseForm.name}
+                      onChange={(e) => setCaseForm({ ...caseForm, name: e.target.value })}
+                      placeholder="Ärendets namn"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="case_number">Ärendenummer</Label>
+                    <Input
+                      id="case_number"
+                      value={caseForm.case_number}
+                      onChange={(e) => setCaseForm({ ...caseForm, case_number: e.target.value })}
+                      placeholder="Ärendenummer"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="address">Adress</Label>
+                    <Textarea
+                      id="address"
+                      value={caseForm.address}
+                      onChange={(e) => setCaseForm({ ...caseForm, address: e.target.value })}
+                      placeholder="Adress"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={resetForm}>
+                    Avbryt
+                  </Button>
+                  <Button 
+                    onClick={handleCreateCase}
+                    disabled={!caseForm.name || !caseForm.case_number || !caseForm.address}
+                  >
+                    Skapa ärende
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          <Badge variant="secondary" className="mb-4">
+            {allCases?.length || 0} ärenden totalt
+          </Badge>
+
+          <div className="grid gap-4">
+            {allCases?.map((caseItem) => (
+              <Card key={caseItem.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{caseItem.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {caseItem.case_number} • {caseItem.address}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Skapat: {new Date(caseItem.created_at).toLocaleDateString('sv-SE')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Dialog open={editingCase?.id === caseItem.id} onOpenChange={(open) => !open && resetForm()}>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => startEditing(caseItem)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Redigera ärende</DialogTitle>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="edit-name">Namn</Label>
+                              <Input
+                                id="edit-name"
+                                value={caseForm.name}
+                                onChange={(e) => setCaseForm({ ...caseForm, name: e.target.value })}
+                                placeholder="Ärendets namn"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="edit-case_number">Ärendenummer</Label>
+                              <Input
+                                id="edit-case_number"
+                                value={caseForm.case_number}
+                                onChange={(e) => setCaseForm({ ...caseForm, case_number: e.target.value })}
+                                placeholder="Ärendenummer"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="edit-address">Adress</Label>
+                              <Textarea
+                                id="edit-address"
+                                value={caseForm.address}
+                                onChange={(e) => setCaseForm({ ...caseForm, address: e.target.value })}
+                                placeholder="Adress"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={resetForm}>
+                              Avbryt
+                            </Button>
+                            <Button 
+                              onClick={handleUpdateCase}
+                              disabled={!caseForm.name || !caseForm.case_number || !caseForm.address}
+                            >
+                              Uppdatera
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={deletingCaseId === caseItem.id}
+                          >
+                            {deletingCaseId === caseItem.id ? (
+                              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Radera ärende?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Detta kommer permanent radera ärendet "{caseItem.name}" och ALLA kopplade 
+                              checklistsvar och defekter. Denna åtgärd kan inte ångras.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteCase(caseItem.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Radera ärende
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {allCases?.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-muted-foreground">Inga ärenden hittade</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 
