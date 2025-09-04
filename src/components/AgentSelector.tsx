@@ -24,7 +24,7 @@ export const AgentSelector = ({ selectedAgent, onAgentChange, disabled }: AgentS
   console.log("AgentSelector rendering with:", { selectedAgent, disabled });
   
   return (
-    <Card className="w-full">
+    <Card className="w-full max-w-4xl">
       <CardHeader>
         <CardTitle className="text-sm font-medium">Välj tillsynsassistent</CardTitle>
       </CardHeader>
