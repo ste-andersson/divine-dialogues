@@ -88,12 +88,14 @@ export const ElevenLabsChat = () => {
           {/* Always show the TranscriptionDisplay when connected or if there are messages */}
           <TranscriptionDisplay messages={messages} />
 
-          {/* Agent Selector */}
-          <AgentSelector 
-            selectedAgent={selectedAgent}
-            onAgentChange={setSelectedAgent}
-            disabled={isStarted}
-          />
+          {/* Agent Selector - Always visible */}
+          <div className="w-full">
+            <AgentSelector 
+              selectedAgent={selectedAgent}
+              onAgentChange={setSelectedAgent}
+              disabled={isStarted}
+            />
+          </div>
 
           {(isLoadingData || dataCollection) && (
             <DataCollectionDisplay 

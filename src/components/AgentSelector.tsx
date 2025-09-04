@@ -22,6 +22,8 @@ interface AgentSelectorProps {
 }
 
 export const AgentSelector = ({ selectedAgent, onAgentChange, disabled }: AgentSelectorProps) => {
+  console.log("AgentSelector rendering with:", { selectedAgent, disabled });
+  
   return (
     <Card className="w-full">
       <CardHeader>
