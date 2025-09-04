@@ -4,14 +4,18 @@ import { AudioRecorder } from '@/components/AudioRecorder';
 import { ConversationDisplay } from '@/components/ConversationDisplay';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { Navigation } from '@/components/Navigation';
+import { AgentSelector } from '@/components/AgentSelector';
 import useElevenLabs from "@/hooks/use-eleven-labs";
 import MicrophonePermission from "@/components/MicrophonePermission";
 
 const Index = () => {
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState("agent_2401k467207hefr83sq8vsfkj5ys");
   const [isProcessing, setIsProcessing] = useState(false);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
+  
+  console.log("Index component rendering with selectedAgent:", selectedAgent);
   
   const {
     conversation,
@@ -24,7 +28,7 @@ const Index = () => {
     startConversation,
     toggleMute,
     conversationId
-  } = useElevenLabs();
+  } = useElevenLabs(selectedAgent);
 
   const { status, isSpeaking } = conversation;
 
@@ -147,6 +151,17 @@ const Index = () => {
                 messages={messages} 
                 isProcessing={isProcessing}
               />
+            </div>
+
+            {/* Agent Selector */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-2xl">
+                <AgentSelector 
+                  selectedAgent={selectedAgent}
+                  onAgentChange={setSelectedAgent}
+                  disabled={isStarted}
+                />
+              </div>
             </div>
           </main>
         )}
