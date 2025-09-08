@@ -40,7 +40,7 @@ const DocumentView: React.FC<DocumentViewProps> = ({
         <div className={styles.documentHeader}>
           <h1 className={styles.agencyName}>RÄDDNINGSTJÄNSTEN STORGÖTEBORG</h1>
           <h2 className={styles.documentTitle}>MEDDELANDE OM TILLSYN ENLIGT LSO</h2>
-          <h3 className={styles.documentSubtitle}>Brandskyddskontroll</h3>
+          <h3 className={styles.documentSubtitle}>Brandskyddstillsyn</h3>
         </div>
 
         {/* Case Information */}
@@ -69,7 +69,7 @@ const DocumentView: React.FC<DocumentViewProps> = ({
         <div className={styles.introduction}>
           <p>
             Räddningstjänsten Storgöteborg har genomfört tillsyn enligt lagen om skydd mot olyckor (LSO) 
-            vid ovan angiven verksamhet. Nedan redovisas resultatet av kontrollen.
+            vid ovan angiven verksamhet. Nedan redovisas resultatet av tillsynen.
           </p>
         </div>
 
