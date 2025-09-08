@@ -95,7 +95,7 @@ const Checklist = () => {
       <div className="container mx-auto px-6 py-12">
         <header className="text-center mb-8">
           <h1 className="text-5xl md:text-6xl font-poppins font-extrabold mb-6 text-primary">
-            Checklista/brister
+            Bilaga/brister
           </h1>
           <p className="text-xl text-muted-foreground">
             Systematisk genomgång av kontrollpunkter och identifierade brister
@@ -114,7 +114,7 @@ const Checklist = () => {
               <div className="flex items-center justify-between gap-4">
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 max-w-xs">
                   <TabsList className="grid w-full grid-cols-2 h-9">
-                    <TabsTrigger value="checklist" className="text-xs font-medium px-2 h-full">Checklista</TabsTrigger>
+                    <TabsTrigger value="checklist" className="text-xs font-medium px-2 h-full">Bilaga</TabsTrigger>
                     <TabsTrigger value="defects" className="text-xs font-medium px-2 h-full">Brister</TabsTrigger>
                   </TabsList>
                 </Tabs>

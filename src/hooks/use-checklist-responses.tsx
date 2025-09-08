@@ -56,7 +56,7 @@ export const useChecklistResponses = (caseId: string | null) => {
     onError: (error) => {
       toast({
         title: "Fel",
-        description: "Kunde inte spara checklistasvar",
+        description: "Kunde inte spara bilagasvar",
         variant: "destructive",
       });
       console.error('Error saving checklist response:', error);

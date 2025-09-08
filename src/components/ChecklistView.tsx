@@ -114,12 +114,12 @@ const ChecklistView = forwardRef<ChecklistViewRef>((props, ref) => {
       setHasUnsavedChanges(false);
       toast({
         title: "Sparat",
-        description: "Checklistan har sparats",
+        description: "Bilagan har sparats",
       });
     } catch (error) {
       toast({
         title: "Fel",
-        description: "Kunde inte spara checklistan",
+        description: "Kunde inte spara bilagan",
         variant: "destructive",
       });
     } finally {
@@ -136,7 +136,7 @@ const ChecklistView = forwardRef<ChecklistViewRef>((props, ref) => {
   if (!selectedCase) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Välj ett ärende för att visa checklistan</p>
+        <p className="text-muted-foreground">Välj ett ärende för att visa bilagan</p>
       </div>
     );
   }
@@ -154,7 +154,7 @@ const ChecklistView = forwardRef<ChecklistViewRef>((props, ref) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between bg-card p-4 rounded-lg border">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">Checklista</h2>
+          <h2 className="text-lg font-semibold">Bilaga</h2>
           {hasUnsavedChanges && (
             <span className="text-sm text-orange-600">• Osparade ändringar</span>
           )}
