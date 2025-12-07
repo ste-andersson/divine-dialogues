@@ -8,7 +8,7 @@ import MicrophonePermission from "@/components/MicrophonePermission";
 
 const Index = () => {
   const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
-  const [selectedAgent, setSelectedAgent] = useState("agent_2401k467207hefr83sq8vsfkj5ys");
+  const [selectedAgent, setSelectedAgent] = useState("agent_7801kb32a955esra733k8dnxpdeb");
   const [isProcessing, setIsProcessing] = useState(false);
   const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -94,7 +94,7 @@ const Index = () => {
       <div className="container mx-auto px-6 py-12">
         <header className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-poppins font-extrabold mb-6 text-primary">
-            Tillsyns-assistenten
+            Dåliga samtal om tro
           </h1>
         </header>
 
