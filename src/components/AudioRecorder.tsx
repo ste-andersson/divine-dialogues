@@ -32,8 +32,8 @@ export const AudioRecorder = ({
         size="lg"
         className={`relative w-20 h-20 rounded-full transition-all duration-300 ${
           isStarted && isConnected
-            ? 'bg-recording hover:bg-recording/90 animate-pulse-recording shadow-lg' 
-            : 'bg-primary hover:bg-primary/90 hover:scale-105 shadow-md hover:shadow-lg'
+            ? 'bg-destructive hover:bg-destructive/90 animate-pulse-recording shadow-lg' 
+            : 'bg-success hover:bg-success/90 hover:scale-105 shadow-md hover:shadow-lg'
         }`}
       >
         {isStarted && isConnected ? (
