@@ -7,11 +7,11 @@ type Agent = {
 };
 
 const agents: Agent[] = [
-  { id: "agent_2401k467207hefr83sq8vsfkj5ys", name: "Ola" },
-  { id: "agent_5601k49hjdh5fhmbdqhs6j50a10w", name: "Elin" },
-  { id: "agent_5801k49gsgmbfwz97js52x2xd2vp", name: "Sanna" },
-  { id: "agent_0501k49gxw80fantcxhw3nddggnk", name: "Adam" },
-  { id: "agent_9401k49h8jm3fp195vq5m4ms7kks", name: "Martin" }
+  { id: "agent_7801kb32a955esra733k8dnxpdeb", name: "Ola" },
+  { id: "agent_7101kbvz89d4ebfvr8pq6h0njx7y", name: "Elin" },
+  { id: "agent_6201kbvzn30tfb5sk2t8mz433x0b", name: "Sanna" },
+  { id: "agent_0501kbw01gz6fy2847afz8va34r9", name: "Adam" },
+  { id: "agent_9201kbw0f0ctfpxrwkcbqas8ar3k", name: "Mathias" }
 ];
 
 interface AgentSelectorProps {
@@ -26,7 +26,7 @@ export const AgentSelector = ({ selectedAgent, onAgentChange, disabled }: AgentS
   return (
     <Card className="w-full max-w-4xl">
       <CardHeader>
-        <CardTitle className="text-sm font-medium">Välj tillsynsassistent</CardTitle>
+        <CardTitle className="text-sm font-medium">Välj samtalspartner</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs 
