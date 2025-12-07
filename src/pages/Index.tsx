@@ -92,10 +92,15 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-12">
-        <header className="text-center mb-16">
+        <header className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-poppins font-extrabold mb-6 text-primary">
             Dåliga samtal om tro
           </h1>
+          <AgentSelector 
+            selectedAgent={selectedAgent}
+            onAgentChange={setSelectedAgent}
+            disabled={isStarted}
+          />
         </header>
 
         <MicrophonePermission permissionGranted={permissionGranted} />
@@ -122,14 +127,6 @@ const Index = () => {
               <ConversationDisplay 
                 messages={messages} 
                 isProcessing={isProcessing}
-              />
-            </div>
-
-            <div className="flex justify-center">
-              <AgentSelector 
-                selectedAgent={selectedAgent}
-                onAgentChange={setSelectedAgent}
-                disabled={isStarted}
               />
             </div>
           </main>
