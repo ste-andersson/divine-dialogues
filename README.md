@@ -2,7 +2,8 @@
 
 En komisk app för att ha samtal om tro och religion. **Observera att denna app inte är avsedd för teologisk vägledning eller undervisning.**
 
-🌐 **Live-version**: [https://samtal-om-tro.lovable.app](https://samtal-om-tro.lovable.app)
+**Live-version**: [https://samtal-om-tro.lovable.app](https://samtal-om-tro.lovable.app)
+**Notera**: Detta projekt skapades i [Lovable](https://lovable.dev).
 
 ## Om projektet
 
